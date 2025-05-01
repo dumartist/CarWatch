@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="lavender">#8692f7</color>
+    <color name="gray">#808080</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+
+    <!-- Dark Mode Colors -->
+    <color name="dark_primary">#8A4FFF</color>
+    <color name="dark_primary_variant">#6A3ACC</color>
+    <color name="dark_secondary">#B085F5</color>
+    <color name="dark_background">#1A1A2E</color>
+    <color name="dark_surface">#16213E</color>
+    <color name="dark_error">#CF6679</color>
+    <color name="dark_on_primary">#FFFFFF</color>
+    <color name="dark_on_secondary">#000000</color>
+    <color name="dark_on_background">#FFFFFF</color>
+    <color name="dark_on_surface">#FFFFFF</color>
+
+    <!-- Light Mode Colors -->
+    <color name="light_primary">@color/light_secondary</color>
+    <color name="light_primary_variant">#0077b6</color>
+    <color name="light_secondary">#62c4ec</color>
+    <color name="light_background">@color/light_secondary</color>
+    <color name="light_surface">#E6E6FA</color>
+    <color name="light_error">#B00020</color>
+    <color name="light_on_primary">#FFFFFF</color>
+    <color name="light_on_secondary">#000000</color>
+    <color name="light_on_background">#FFFFFF</color>
+    <color name="light_on_surface">#000000</color>
+
+    <!-- Accent Colors (Consistent across modes) -->
+    <color name="accent_green">#4CAF50</color>
+    <color name="accent_yellow">#FFC107</color>
+    <color name="red">#F44336</color>
+
+    <!-- Neutral Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <color name="text_color">@color/black</color>
+    <color name="text_in_btn">@color/white</color>
+
+</resources>

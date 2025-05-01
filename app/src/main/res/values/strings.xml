@@ -1,0 +1,48 @@
+<resources>
+    <!-- General -->
+    <string name="app_name">CarWatch</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_account">Account</string>
+    <string name="title_weather">Weather</string>
+    <string name="title_history">History</string>
+
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="create_account">Create Account</string>
+    <string name="sign_in">Sign In</string>
+
+    <!-- Error Messages -->
+    <string name="error_invalid_username">Invalid username</string>
+    <string name="error_invalid_password">Password must be at least 8 characters</string>
+    <string name="error_login_failed">Login failed. Please check your credentials.</string>
+
+    <!-- Car Detection Strings -->
+    <string name="car_detection_title">Car Detection</string>
+    <string name="no_description_detected">No Description Detected</string>
+    <string name="last_detection">Last Detection: %1$s</string>
+
+    <!-- Lamp Control Strings -->
+    <string name="garage_lamp">Garage Lamp</string>
+    <string name="lamp_toggle">Turn On/Off</string>
+
+    <!-- Placeholder Texts -->
+    <string name="loading">Loading…</string>
+    <string name="please_wait">Please wait</string>
+    <string name="connection_error">Connection Error</string>
+
+    <!-- Confirmation Dialogs -->
+    <string name="confirm_logout">Are you sure you want to log out?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <string name="enter_city_name">Enter City Name</string>
+    <string name="change_city">Change City</string>
+    <string name="humidity">Humidity</string>
+    <string name="wind">Wind</string>
+    <string name="weather_icon">Weather Icon</string>
+
+    <string name="carwatch_text">CarWatch</string>>
+    <string name="user_profile">User Profile Image</string>
+    <string name="exit_icon">Exit Button</string>
+</resources>

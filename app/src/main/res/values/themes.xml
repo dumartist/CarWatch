@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base Application Theme - Light Mode -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Light Mode Colors -->
+        <item name="colorPrimary">@color/light_primary</item>
+        <item name="colorPrimaryVariant">@color/light_primary_variant</item>
+        <item name="colorSecondary">@color/light_secondary</item>
+        <item name="android:windowBackground">@color/light_background</item>
+        <item name="android:textColor">@color/light_on_background</item>
+        <item name="android:statusBarColor">@color/light_primary_variant</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Material Design Color Attributes -->
+        <item name="colorError">@color/light_error</item>
+        <item name="android:colorBackground">@color/light_background</item>
+        <item name="colorSurface">@color/light_surface</item>
+
+        <!-- Text Appearance -->
+        <item name="android:textColorPrimary">@color/light_on_primary</item>
+        <item name="android:textColorSecondary">@color/light_on_secondary</item>
+
+        <!-- Material Components Styling -->
+        <item name="materialButtonStyle">@style/AppTheme.Button</item>
+        <item name="textInputStyle">@style/AppTheme.Input</item>
+    </style>
+
+    <!-- Card Styles -->
+    <style name="AppTheme.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/white</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">12dp</item>
+    </style>
+
+    <!-- Button Styles -->
+    <style name="AppTheme.Button" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/light_primary_variant</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <!-- Input Styles -->
+    <style name="AppTheme.Input" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/light_primary_variant</item>
+        <item name="hintTextColor">@color/light_secondary</item>
+    </style>
+
+    <style name="roundedImageViewRounded">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+</resources>
