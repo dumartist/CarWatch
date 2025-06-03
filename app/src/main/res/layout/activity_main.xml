@@ -32,5 +32,4 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"
         app:menu="@menu/bottom_nav_menu" />
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

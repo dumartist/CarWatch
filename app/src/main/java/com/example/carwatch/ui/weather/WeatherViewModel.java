@@ -16,7 +16,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class WeatherViewModel extends ViewModel {
-    private static final String API_KEY = "8a5e4a7705ac1a2528fcaedea2e95b26"; // Replace with your actual API key
+    private static final String API_KEY = "8a5e4a7705ac1a2528fcaedea2e95b26";
 
     private final MutableLiveData<WeatherData> _weatherData = new MutableLiveData<>();
     public LiveData<WeatherData> weatherData = _weatherData;
@@ -24,10 +24,11 @@ public class WeatherViewModel extends ViewModel {
     private final MutableLiveData<String> _errorMessage = new MutableLiveData<>();
     public LiveData<String> errorMessage = _errorMessage;
 
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
     public void fetchWeatherData(String cityName) {
         String url = "https://api.openweathermap.org/data/2.5/weather?q=" + cityName + "&appid=" + API_KEY + "&units=metric";
 
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(() -> {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder().url(url).build();
@@ -70,7 +71,14 @@ public class WeatherViewModel extends ViewModel {
         }
     }
 
-    // Inner class to hold weather data
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
+        }
+    }
+
     public static class WeatherData {
         private final String cityName;
         private final double temperature;
@@ -89,7 +97,6 @@ public class WeatherViewModel extends ViewModel {
             this.iconCode = iconCode;
         }
 
-        // Getters
         public String getCityName() { return cityName; }
         public double getTemperature() { return temperature; }
         public double getHumidity() { return humidity; }

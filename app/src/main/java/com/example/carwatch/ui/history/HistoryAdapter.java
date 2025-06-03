@@ -13,10 +13,10 @@ import com.example.carwatch.R;
 import java.util.List;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder> {
-    private List<HistoryViewModel.HistoryItem> historyItems;
+    private List<HistoryViewModel.UiHistoryItem> historyUiItems;
 
-    public HistoryAdapter(List<HistoryViewModel.HistoryItem> historyItems) {
-        this.historyItems = historyItems;
+    public HistoryAdapter(List<HistoryViewModel.UiHistoryItem> historyUiItems) {
+        this.historyUiItems = historyUiItems;
     }
 
     @NonNull
@@ -29,7 +29,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
 
     @Override
     public void onBindViewHolder(@NonNull HistoryViewHolder holder, int position) {
-        HistoryViewModel.HistoryItem item = historyItems.get(position);
+        HistoryViewModel.UiHistoryItem item = historyUiItems.get(position);
         holder.tvTitle.setText(item.getTitle());
         holder.tvTimestamp.setText(item.getTimestamp());
         holder.tvDetails.setText(item.getDetails());
@@ -38,11 +38,11 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
 
     @Override
     public int getItemCount() {
-        return historyItems.size();
+        return historyUiItems != null ? historyUiItems.size() : 0;
     }
 
-    public void updateData(List<HistoryViewModel.HistoryItem> newItems) {
-        this.historyItems = newItems;
+    public void updateData(List<HistoryViewModel.UiHistoryItem> newItems) {
+        this.historyUiItems = newItems;
         notifyDataSetChanged();
     }
 

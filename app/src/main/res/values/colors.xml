@@ -43,5 +43,4 @@
 
     <color name="text_color">@color/black</color>
     <color name="text_in_btn">@color/white</color>
-
 </resources>

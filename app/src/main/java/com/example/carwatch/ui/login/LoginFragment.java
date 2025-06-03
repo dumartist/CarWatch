@@ -1,8 +1,6 @@
 package com.example.carwatch.ui.login;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,15 +18,6 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.carwatch.databinding.FragmentLoginBinding;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
 public class LoginFragment extends Fragment {
 
     private FragmentLoginBinding binding;
@@ -37,15 +26,18 @@ public class LoginFragment extends Fragment {
     private EditText etSignUpUsername, etSignUpPassword, etConfirmPassword;
     private Button btnSignIn, btnCreateAccount;
 
+    private LoginViewModel loginViewModel;
+
     public interface OnLoginSuccessListener {
-        void onLoginSuccess(String username);
+        void onLoginSuccess(String userId, String username);
     }
+
+    private OnLoginSuccessListener loginSuccessListener;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        LoginViewModel LoginViewModel =
-                new ViewModelProvider(this).get(LoginViewModel.class);
+        loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
         binding = FragmentLoginBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -55,48 +47,84 @@ public class LoginFragment extends Fragment {
         TextView tvCreateAccount = binding.tvCreateAccount;
         TextView tvSignIn = binding.tvSignIn;
 
-        // Form Login
         etLoginUsername = binding.etLoginUsername;
         etLoginPassword = binding.etLoginPassword;
         btnSignIn = binding.btnSignIn;
 
-        // Form Sign-Up
         etSignUpUsername = binding.etSignUpUsername;
         etSignUpPassword = binding.etSignUpPassword;
         etConfirmPassword = binding.etConfirmPassword;
         btnCreateAccount = binding.btnCreateAccount;
 
-        // Jika klik "Create Account", pindah ke form sign-up
+        // If "Create Account" is clicked, switch to the sign-up form
         tvCreateAccount.setOnClickListener(v -> viewSwitcher.showNext());
 
-        // Jika klik "Sign In", kembali ke form login
+        // If "Sign In" is clicked, switch back to the login form
         tvSignIn.setOnClickListener(v -> viewSwitcher.showPrevious());
 
         btnSignIn.setOnClickListener(v -> {
-            String username = etLoginUsername.getText().toString();
-            String password = etLoginPassword.getText().toString();
+            String username = etLoginUsername.getText().toString().trim();
+            String password = etLoginPassword.getText().toString().trim();
             if (!username.isEmpty() && !password.isEmpty()) {
-                new LoginTask().execute(username, password);
+                loginViewModel.login(username, password);
             } else {
                 Toast.makeText(getActivity(), "Username atau Password tidak boleh kosong!", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnCreateAccount.setOnClickListener(v -> {
-            String username = etSignUpUsername.getText().toString();
-            String password = etSignUpPassword.getText().toString();
-            String confirmPassword = etConfirmPassword.getText().toString();
+            String username = etSignUpUsername.getText().toString().trim();
+            String password = etSignUpPassword.getText().toString().trim();
+            String confirmPassword = etConfirmPassword.getText().toString().trim();
 
             if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
                 Toast.makeText(getActivity(), "Semua field harus diisi!", Toast.LENGTH_SHORT).show();
             } else if (!password.equals(confirmPassword)) {
                 Toast.makeText(getActivity(), "Password tidak cocok!", Toast.LENGTH_SHORT).show();
             } else {
-                new RegisterTask().execute(username, password);
+                loginViewModel.register(username, password);
             }
         });
 
+        setupObservers();
+
         return root;
+    }
+
+    private void setupObservers() {
+        loginViewModel.getLoginResult().observe(getViewLifecycleOwner(), loginResult -> {
+            if (loginResult == null) return;
+
+            if (loginResult.getSuccessData() != null) {
+                String userId = String.valueOf(loginResult.getSuccessData().getUserId());
+                String username = loginResult.getSuccessData().getUsername();
+
+                // Call the interface method with the userId and username
+                if (loginSuccessListener != null) {
+                    loginSuccessListener.onLoginSuccess(userId, username);
+                } else {
+                    Log.e("LoginFragment", "OnLoginSuccessListener is null");
+                }
+            } else if (loginResult.getError() != null) {
+                Toast.makeText(getActivity(), loginResult.getError(), Toast.LENGTH_LONG).show();
+                Log.e("LoginFragment", "Login failed: " + loginResult.getError());
+            }
+        });
+
+        loginViewModel.getRegisterResult().observe(getViewLifecycleOwner(), registerResult -> {
+            if (registerResult == null) return;
+
+            Toast.makeText(getActivity(), registerResult.getMessage(), Toast.LENGTH_SHORT).show();
+            if (registerResult.isSuccess()) {
+                viewSwitcher.showPrevious(); // Switch to login view
+                // Clear registration fields
+                etSignUpUsername.setText("");
+                etSignUpPassword.setText("");
+                etConfirmPassword.setText("");
+            } else {
+                 Log.e("LoginFragment", "Registration failed: " + registerResult.getMessage());
+            }
+        });
     }
 
     @Override
@@ -105,123 +133,20 @@ public class LoginFragment extends Fragment {
         binding = null;
     }
 
-    private class LoginTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... params) {
-            try {
-                URL url = new URL("http://192.168.1.4/carwatch/login.php"); // Ganti dengan IP server
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setDoOutput(true);
-
-                OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
-                writer.write("username=" + params[0] + "&password=" + params[1]);
-                writer.flush();
-                writer.close();
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                reader.close();
-
-                return response.toString();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return "Error: " + e.getMessage();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            try {
-                // Parse the JSON response
-                JSONObject jsonResponse = new JSONObject(result);
-                boolean success = jsonResponse.getBoolean("success");
-
-                if (success) {
-                    String userId = jsonResponse.getString("user_id");
-                    String username = jsonResponse.getString("username");
-                    String password = etLoginPassword.getText().toString(); // Get the entered password
-
-                    // Save the username, userId, and password to SharedPreferences
-                    SharedPreferences sharedPreferences = getActivity().getSharedPreferences("my_app", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("username", username);
-                    editor.putString("userId", userId);
-                    editor.putString("password", password);
-                    editor.apply(); // Use apply() instead of commit() for asynchronous saving
-
-                    // Call the interface method with the username
-                    if (getActivity() instanceof OnLoginSuccessListener) {
-                        ((OnLoginSuccessListener) getActivity()).onLoginSuccess(username);
-                    } else {
-                        Log.e("LoginFragment", "Activity must implement OnLoginSuccessListener");
-                    }
-                } else {
-                    // Handle login failure (e.g., display an error message)
-                    Toast.makeText(getActivity(), "Login failed: " + jsonResponse.getString("message"), Toast.LENGTH_SHORT).show();
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-                Toast.makeText(getActivity(), "Error parsing server response", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private class RegisterTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... params) {
-            try {
-                URL url = new URL("http://192.168.1.4/carwatch/register.php"); // Ganti dengan IP server
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setDoOutput(true);
-
-                OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
-                writer.write("username=" + params[0] + "&password=" + params[1]);
-                writer.flush();
-                writer.close();
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                reader.close();
-
-                return response.toString();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return "Error: " + e.getMessage();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            // Just display the raw result
-            Toast.makeText(getActivity(), result, Toast.LENGTH_SHORT).show();
-
-            //Switch to login view if register success
-            viewSwitcher.showPrevious();
-        }
-    }
-
-
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         if (context instanceof OnLoginSuccessListener) {
-            //Assign the listener
+            loginSuccessListener = (OnLoginSuccessListener) context; // Assign the listener
         } else {
             throw new ClassCastException(context.toString()
                     + " must implement LoginFragment.OnLoginSuccessListener");
         }
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        loginSuccessListener = null; // Avoid memory leaks
+    }
 }

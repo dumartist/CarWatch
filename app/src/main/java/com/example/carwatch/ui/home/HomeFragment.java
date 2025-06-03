@@ -1,7 +1,5 @@
 package com.example.carwatch.ui.home;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,14 +23,12 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
     private HomeViewModel homeViewModel;
     private HistoryViewModel historyViewModel;
-    private String username;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        // Inflate the binding
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -41,53 +37,54 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Initialize ViewModels
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-        historyViewModel = new ViewModelProvider(this).get(HistoryViewModel.class); // Initialize HistoryViewModel
+        historyViewModel = new ViewModelProvider(this).get(HistoryViewModel.class);
 
-        // Get username from SharedPreferences
-        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("my_app", Context.MODE_PRIVATE);
-        username = sharedPreferences.getString("username", "User"); // Default value if not found
-
-        String greeting = "Hello " + username;
-        binding.greetingText.setText(greeting);
+        homeViewModel.username.observe(getViewLifecycleOwner(), currentUsername -> {
+            if (currentUsername != null && !currentUsername.isEmpty()) {
+                String greeting = "Hello " + currentUsername;
+                binding.greetingText.setText(greeting);
+            } else {
+                binding.greetingText.setText("Hello User"); // Default greeting
+            }
+        });
 
         SwitchMaterial lampSwitch = binding.lampToggleSwitch;
         lampSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             // TODO: Implement actual lamp control logic later on
         });
 
-        historyViewModel.getHistoryItems().observe(getViewLifecycleOwner(), historyItems -> {
-            updateCarDetectionInfo(historyItems);
-        });
+        historyViewModel.getHistoryUiItems().observe(getViewLifecycleOwner(), this::updateCarDetectionInfo);
 
-        boolean hasNewNotifications = false;
-        if (hasNewNotifications) {
-            binding.notificationIcon.setVisibility(View.VISIBLE);
-        } else {
-            binding.notificationIcon.setVisibility(View.INVISIBLE);
-        }
+        // Fetch initial history data if needed when HomeFragment becomes visible.
+        // This ensures data is loaded if the user navigates directly here after login
+        // or if it wasn't loaded by HistoryFragment yet.
+        historyViewModel.fetchAllHistoryData();
     }
 
-    private void updateCarDetectionInfo(List<HistoryViewModel.HistoryItem> historyItems) {
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh username when fragment resumes, in case it was changed elsewhere
+        homeViewModel.loadUsername();
+        // Optionally, refresh history data as well if it might change frequently
+        // historyViewModel.fetchAllHistoryData(); 
+    }
+
+    private void updateCarDetectionInfo(List<HistoryViewModel.UiHistoryItem> uiHistoryItems) {
         TextView homeStatusTitle = binding.homeStatusTitle;
         TextView homeCarNumber = binding.homeCarNumber;
         TextView lastDetectionTime = binding.lastDetectionTime;
         TextView homeDescription = binding.homeDescription;
 
-        if (historyItems != null && !historyItems.isEmpty()) {
+        if (uiHistoryItems != null && !uiHistoryItems.isEmpty()) {
             // Get the latest history item
-            HistoryViewModel.HistoryItem latestItem = historyItems.get(0);
+            HistoryViewModel.UiHistoryItem latestItem = uiHistoryItems.get(0);
 
-            // Update UI elements with data from the latest history item
             homeStatusTitle.setText(latestItem.getTitle());
             homeCarNumber.setText(latestItem.getPlate());
-
-            // Format the last detection time
             String formattedTime = latestItem.getTimestamp();
             lastDetectionTime.setText(getString(R.string.last_detection, formattedTime));
-
-            // Set the license plate
             homeDescription.setText(latestItem.getDetails());
         } else {
             // Handle the case where there is no history data

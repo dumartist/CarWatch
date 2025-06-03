@@ -3,7 +3,6 @@ package com.example.carwatch.ui.account;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -12,20 +11,16 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.example.carwatch.model.ServerResponse;
+import com.example.carwatch.network.ApiService;
+import com.example.carwatch.network.RetrofitClient;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class AccountViewModel extends AndroidViewModel {
 
@@ -33,13 +28,12 @@ public class AccountViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> usernameUpdateSuccess = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> accountDeletionSuccess = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> passwordUpdateSuccess = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> logoutSuccess = new MutableLiveData<>(false);
+
 
     private SharedPreferences sharedPreferences;
-    private String userId;
-
-    private static final String UPDATE_USERNAME_URL = "http://192.168.1.4/carwatch/users_update.php";
-    private static final String UPDATE_PASSWORD_URL = "http://192.168.1.4/carwatch/update_password.php";
-    private static final String DELETE_ACCOUNT_URL = "http://192.168.1.4/carwatch/delete_user.php";
+    private String userId; // Still useful for client-side checks or if some future endpoint needs it
+    private ApiService apiService;
 
     public enum OperationStatus {
         IDLE, LOADING, SUCCESS, ERROR
@@ -48,10 +42,8 @@ public class AccountViewModel extends AndroidViewModel {
     public AccountViewModel(@NonNull Application application) {
         super(application);
         sharedPreferences = application.getSharedPreferences("my_app", Context.MODE_PRIVATE);
-        userId = sharedPreferences.getString("userId", null);
-        if (userId == null) {
-            Log.e("AccountViewModel", "User ID not found in SharedPreferences");
-        }
+        userId = sharedPreferences.getString("userId", null); // Keep for potential client-side logic
+        apiService = RetrofitClient.getApiService();
     }
 
     public LiveData<OperationStatus> getOperationStatus() {
@@ -70,6 +62,10 @@ public class AccountViewModel extends AndroidViewModel {
         return passwordUpdateSuccess;
     }
 
+    public LiveData<Boolean> getLogoutSuccess() {
+        return logoutSuccess;
+    }
+
     public void resetUsernameUpdateSuccess() {
         usernameUpdateSuccess.setValue(false);
     }
@@ -82,6 +78,10 @@ public class AccountViewModel extends AndroidViewModel {
         passwordUpdateSuccess.setValue(false);
     }
 
+    public void resetLogoutSuccess() {
+        logoutSuccess.setValue(false);
+    }
+
 
     public String getCurrentUsernameFromSharedPreferences() {
         if (sharedPreferences == null) {
@@ -91,6 +91,8 @@ public class AccountViewModel extends AndroidViewModel {
         return sharedPreferences.getString("username", null);
     }
 
+    // This method might be used by AccountFragment to get the password for API calls.
+    // Ensure this is handled securely if used.
     private String getCurrentPasswordFromSharedPreferences() {
         if (sharedPreferences == null) {
             Log.e("AccountViewModel", "SharedPreferences not initialized.");
@@ -101,268 +103,216 @@ public class AccountViewModel extends AndroidViewModel {
 
 
     public void updateName(String newName) {
+        // userId check can remain for client-side validation if user is logged in locally
         if (userId == null) {
-            Log.e("AccountViewModel", "User ID is not set. Cannot update name.");
+            Log.e("AccountViewModel", "User ID is not set locally. Cannot update name.");
             operationStatus.setValue(OperationStatus.ERROR);
             Toast.makeText(getApplication(), "User not logged in. Cannot update name.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         operationStatus.setValue(OperationStatus.LOADING);
-        new UpdateUsernameTask(userId, newName).execute();
+
+        Map<String, String> body = new HashMap<>();
+        body.put("new_username", newName);
+
+        apiService.updateUser(body).enqueue(new Callback<ServerResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ServerResponse> call, @NonNull Response<ServerResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ServerResponse serverResponse = response.body();
+                    if (serverResponse.isSuccess()) {
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("username", newName); // Update local username
+                        editor.apply();
+
+                        usernameUpdateSuccess.setValue(true);
+                        operationStatus.setValue(OperationStatus.SUCCESS);
+                        // Use server message if available, otherwise generic
+                        String message = serverResponse.getMessage() != null ? serverResponse.getMessage() : "Username updated successfully";
+                        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show();
+                    } else {
+                        operationStatus.setValue(OperationStatus.ERROR);
+                        String message = serverResponse.getMessage() != null ? serverResponse.getMessage() : "Failed to update username";
+                        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    operationStatus.setValue(OperationStatus.ERROR);
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown server error";
+                        Log.e("UpdateUsername", "Server error: " + response.code() + " " + errorBody);
+                        Toast.makeText(getApplication(), "Failed to update username. Server error: " + response.code(), Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Toast.makeText(getApplication(), "Failed to update username. Server error.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ServerResponse> call, @NonNull Throwable t) {
+                Log.e("UpdateUsername", "Error: " + t.getMessage(), t);
+                operationStatus.setValue(OperationStatus.ERROR);
+                Toast.makeText(getApplication(), "Error connecting to server.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     public void updatePassword(String currentPasswordInput, String newPassword) {
-        if (userId == null) {
-            Log.e("AccountViewModel", "User ID is not set. Cannot update password.");
+        if (userId == null) { // Client-side check
+            Log.e("AccountViewModel", "User ID is not set locally. Cannot update password.");
             operationStatus.setValue(OperationStatus.ERROR);
             Toast.makeText(getApplication(), "User not logged in. Cannot update password.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         operationStatus.setValue(OperationStatus.LOADING);
-        new UpdatePasswordTask(userId, currentPasswordInput, newPassword, newPassword).execute();
+
+        Map<String, String> body = new HashMap<>();
+        body.put("current_password", currentPasswordInput);
+        body.put("new_password", newPassword);
+        body.put("confirm_new_password", newPassword); // Flask expects confirm_new_password
+
+        // userId is no longer sent as Flask uses session
+        apiService.updatePassword(body).enqueue(new Callback<ServerResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ServerResponse> call, @NonNull Response<ServerResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ServerResponse serverResponse = response.body();
+                    if (serverResponse.isSuccess()) {
+                        passwordUpdateSuccess.setValue(true);
+                        operationStatus.setValue(OperationStatus.SUCCESS);
+                        String message = serverResponse.getMessage() != null ? serverResponse.getMessage() : "Password updated successfully";
+                        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show();
+                    } else {
+                        operationStatus.setValue(OperationStatus.ERROR);
+                        String message = serverResponse.getMessage() != null ? serverResponse.getMessage() : "Failed to update password";
+                        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    operationStatus.setValue(OperationStatus.ERROR);
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown server error";
+                        Log.e("UpdatePassword", "Server error: " + response.code() + " " + errorBody);
+                        Toast.makeText(getApplication(), "Failed to update password. Server error: " + response.code(), Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Toast.makeText(getApplication(), "Failed to update password. Server error.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ServerResponse> call, @NonNull Throwable t) {
+                Log.e("UpdatePassword", "Error: " + t.getMessage(), t);
+                operationStatus.setValue(OperationStatus.ERROR);
+                Toast.makeText(getApplication(), "Error connecting to server.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    public void deleteAccount() {
-        if (userId == null) {
-            Log.e("AccountViewModel", "User ID is not set. Cannot delete account.");
+    public void deleteAccount(String currentPassword) {
+        if (userId == null) { // Client-side check
+            Log.e("AccountViewModel", "User ID is not set locally. Cannot delete account.");
             operationStatus.setValue(OperationStatus.ERROR);
             Toast.makeText(getApplication(), "User not logged in. Cannot delete account.", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (currentPassword.isEmpty()) {
+            Toast.makeText(getApplication(), "Current password is required to delete account.", Toast.LENGTH_SHORT).show();
+            operationStatus.setValue(OperationStatus.ERROR);
+            return;
+        }
 
         operationStatus.setValue(OperationStatus.LOADING);
-        new DeleteAccountTask(userId).execute();
-    }
 
-    // --- AsyncTasks for Server Communication ---
-    private class UpdateUsernameTask extends AsyncTask<Void, Void, String> {
-        private final String userId;
-        private final String newUsername;
+        Map<String, String> body = new HashMap<>();
+        body.put("password", currentPassword);
 
-        UpdateUsernameTask(String userId, String newUsername) {
-            this.userId = userId;
-            this.newUsername = newUsername;
-        }
-
-        @Override
-        protected String doInBackground(Void... voids) {
-            try {
-                URL url = new URL(UPDATE_USERNAME_URL);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.setDoOutput(true);
-                httpURLConnection.setDoInput(true);
-
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
-                String post_data = URLEncoder.encode("user_id", "UTF-8") + "=" + URLEncoder.encode(userId, "UTF-8") + "&"
-                        + URLEncoder.encode("username", "UTF-8") + "=" + URLEncoder.encode(newUsername, "UTF-8");
-                bufferedWriter.write(post_data);
-                bufferedWriter.flush();
-                bufferedWriter.close();
-                outputStream.close();
-
-                InputStream inputStream = httpURLConnection.getInputStream();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.ISO_8859_1));
-                String result = "";
-                String line = "";
-                while ((line = bufferedReader.readLine()) != null) {
-                    result += line;
-                }
-                bufferedReader.close();
-                inputStream.close();
-                httpURLConnection.disconnect();
-                return result;
-
-            } catch (IOException e) {
-                Log.e("UpdateUsernameTask", "Error in background task", e);
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            if (result != null) {
-                Log.d("UpdateUsernameTask", "Result: " + result);
-                try {
-                    JSONObject jsonResponse = new JSONObject(result);
-                    if (jsonResponse.getBoolean("success")) {
-                        // Update SharedPreferences with the new username (username is not sensitive like a password)
+        // userId is no longer sent; Flask uses session. Pass currentPassword for verification.
+        apiService.deleteUser(body).enqueue(new Callback<ServerResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ServerResponse> call, @NonNull Response<ServerResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ServerResponse serverResponse = response.body();
+                    if (serverResponse.isSuccess()) {
                         SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("username", newUsername);
-                        editor.apply();
-
-                        usernameUpdateSuccess.setValue(true);
-                        operationStatus.setValue(OperationStatus.SUCCESS);
-                        Toast.makeText(getApplication(), "Username updated successfully", Toast.LENGTH_SHORT).show();
-                    } else {
-                        operationStatus.setValue(OperationStatus.ERROR);
-                        String message = jsonResponse.optString("message", "Failed to update username");
-                        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show();
-                    }
-                } catch (JSONException e) {
-                    Log.e("UpdateUsernameTask", "JSON parsing error", e);
-                    operationStatus.setValue(OperationStatus.ERROR);
-                    Toast.makeText(getApplication(), "Invalid response from server", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                operationStatus.setValue(OperationStatus.ERROR);
-                Toast.makeText(getApplication(), "Error connecting to server", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private class UpdatePasswordTask extends AsyncTask<Void, Void, String> {
-        private final String userId;
-        private final String currentPassword;
-        private final String newPassword;
-        private final String confirmNewPassword;
-
-        UpdatePasswordTask(String userId, String currentPassword, String newPassword, String confirmNewPassword) {
-            this.userId = userId;
-            this.currentPassword = currentPassword;
-            this.newPassword = newPassword;
-            this.confirmNewPassword = confirmNewPassword;
-        }
-
-        @Override
-        protected String doInBackground(Void... voids) {
-            try {
-                URL url = new URL(UPDATE_PASSWORD_URL);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.setDoOutput(true);
-                httpURLConnection.setDoInput(true);
-
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
-
-                String post_data = URLEncoder.encode("user_id", "UTF-8") + "=" + URLEncoder.encode(userId, "UTF-8") + "&"
-                        + URLEncoder.encode("current_password", "UTF-8") + "=" + URLEncoder.encode(currentPassword, "UTF-8") + "&"
-                        + URLEncoder.encode("new_password", "UTF-8") + "=" + URLEncoder.encode(newPassword, "UTF-8") + "&"
-                        + URLEncoder.encode("confirm_new_password", "UTF-8") + "=" + URLEncoder.encode(confirmNewPassword, "UTF-8");
-                bufferedWriter.write(post_data);
-                bufferedWriter.flush();
-                bufferedWriter.close();
-                outputStream.close();
-
-                InputStream inputStream = httpURLConnection.getInputStream();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.ISO_8859_1));
-                String result = "";
-                String line = "";
-                while ((line = bufferedReader.readLine()) != null) {
-                    result += line;
-                }
-                bufferedReader.close();
-                inputStream.close();
-                httpURLConnection.disconnect();
-                return result;
-
-            } catch (IOException e) {
-                Log.e("UpdatePasswordTask", "Error in background task", e);
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            if (result != null) {
-                Log.d("UpdatePasswordTask", "Result: " + result);
-                try {
-                    JSONObject jsonResponse = new JSONObject(result);
-                    if (jsonResponse.getBoolean("success")) {
-                        passwordUpdateSuccess.setValue(true);
-                        operationStatus.setValue(OperationStatus.SUCCESS);
-                        Toast.makeText(getApplication(), "Password updated successfully", Toast.LENGTH_SHORT).show();
-                    } else {
-                        operationStatus.setValue(OperationStatus.ERROR);
-                        String message = jsonResponse.optString("message", "Failed to update password");
-                        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show();
-                    }
-                } catch (JSONException e) {
-                    Log.e("UpdatePasswordTask", "JSON parsing error", e);
-                    operationStatus.setValue(OperationStatus.ERROR);
-                    Toast.makeText(getApplication(), "Invalid response from server", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                operationStatus.setValue(OperationStatus.ERROR);
-                Toast.makeText(getApplication(), "Error connecting to server", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private class DeleteAccountTask extends AsyncTask<Void, Void, String> {
-        private final String userId;
-
-        DeleteAccountTask(String userId) {
-            this.userId = userId;
-        }
-
-        @Override
-        protected String doInBackground(Void... voids) {
-            try {
-                URL url = new URL(DELETE_ACCOUNT_URL);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.setDoOutput(true);
-                httpURLConnection.setDoInput(true);
-
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
-                String post_data = URLEncoder.encode("user_id", "UTF-8") + "=" + URLEncoder.encode(userId, "UTF-8");
-                bufferedWriter.write(post_data);
-                bufferedWriter.flush();
-                bufferedWriter.close();
-                outputStream.close();
-
-                InputStream inputStream = httpURLConnection.getInputStream();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.ISO_8859_1));
-                String result = "";
-                String line = "";
-                while ((line = bufferedReader.readLine()) != null) {
-                    result += line;
-                }
-                bufferedReader.close();
-                inputStream.close();
-                httpURLConnection.disconnect();
-                return result;
-
-            } catch (IOException e) {
-                Log.e("DeleteAccountTask", "Error in background task", e);
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            if (result != null) {
-                Log.d("DeleteAccountTask", "Result: " + result);
-                try {
-                    JSONObject jsonResponse = new JSONObject(result);
-                    if (jsonResponse.getBoolean("success")) {
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.clear();
+                        editor.clear(); // Clear all user data
                         editor.apply();
 
                         accountDeletionSuccess.setValue(true);
                         operationStatus.setValue(OperationStatus.SUCCESS);
-                        Toast.makeText(getApplication(), "Account deleted successfully", Toast.LENGTH_SHORT).show();
+                        String message = serverResponse.getMessage() != null ? serverResponse.getMessage() : "Account deleted successfully";
+                        Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show();
                     } else {
                         operationStatus.setValue(OperationStatus.ERROR);
-                        String message = jsonResponse.optString("message", "Failed to delete account");
+                        String message = serverResponse.getMessage() != null ? serverResponse.getMessage() : "Failed to delete account";
                         Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show();
                     }
-                } catch (JSONException e) {
-                    Log.e("DeleteAccountTask", "JSON parsing error", e);
+                } else {
                     operationStatus.setValue(OperationStatus.ERROR);
-                    Toast.makeText(getApplication(), "Invalid response from server", Toast.LENGTH_SHORT).show();
+                     try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown server error";
+                        Log.e("DeleteAccount", "Server error: " + response.code() + " " + errorBody);
+                        Toast.makeText(getApplication(), "Failed to delete account. Server error: " + response.code(), Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Toast.makeText(getApplication(), "Failed to delete account. Server error.", Toast.LENGTH_SHORT).show();
+                    }
                 }
-            } else {
-                operationStatus.setValue(OperationStatus.ERROR);
-                Toast.makeText(getApplication(), "Error connecting to server", Toast.LENGTH_SHORT).show();
             }
-        }
+
+            @Override
+            public void onFailure(@NonNull Call<ServerResponse> call, @NonNull Throwable t) {
+                Log.e("DeleteAccount", "Error: " + t.getMessage(), t);
+                operationStatus.setValue(OperationStatus.ERROR);
+                Toast.makeText(getApplication(), "Error connecting to server.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    public void logout() {
+        operationStatus.setValue(OperationStatus.LOADING);
+        apiService.logout().enqueue(new Callback<ServerResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ServerResponse> call, @NonNull Response<ServerResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    clearLocalSessionData();
+                    logoutSuccess.setValue(true);
+                    operationStatus.setValue(OperationStatus.SUCCESS);
+                    Toast.makeText(getApplication(), "Logged out successfully", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Even if server logout fails, still clear local data as a fallback.
+                    Log.e("Logout", "Server logout failed or returned error. Proceeding with local logout.");
+                    clearLocalSessionData(); // Fallback: clear local data anyway
+                    logoutSuccess.setValue(true); // Indicate local logout happened
+                    operationStatus.setValue(OperationStatus.ERROR);
+                    String errorMessage = "Logout failed on server, but local session cleared.";
+                    if (response.body() != null && response.body().getMessage() != null) {
+                        errorMessage = response.body().getMessage();
+                    } else if (!response.isSuccessful()) {
+                        errorMessage = "Server error: " + response.code();
+                    }
+                    Toast.makeText(getApplication(), errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ServerResponse> call, @NonNull Throwable t) {
+                Log.e("Logout", "Error connecting to server for logout: " + t.getMessage(), t);
+                // Fallback: clear local data even if network call fails
+                clearLocalSessionData();
+                logoutSuccess.setValue(true); // Indicate local logout happened
+                operationStatus.setValue(OperationStatus.ERROR);
+                Toast.makeText(getApplication(), "Error connecting to server. Logged out locally.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void clearLocalSessionData() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove("isLoggedIn");
+        editor.remove("userId");
+        editor.remove("username");
+        editor.remove("password"); // Or any other sensitive data
+        // Consider editor.clear() if all shared prefs are user-specific for this session
+        editor.apply();
     }
 }

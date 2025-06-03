@@ -18,20 +18,23 @@ import com.example.carwatch.ui.home.HomeFragment;
 import com.example.carwatch.ui.login.LoginFragment;
 import com.example.carwatch.ui.weather.WeatherFragment;
 
-public class MainActivity extends AppCompatActivity implements LoginFragment.OnLoginSuccessListener, AccountFragment.AccountDeletionNavigator {
+public class MainActivity extends AppCompatActivity implements LoginFragment.OnLoginSuccessListener, AccountFragment.AccountDeletionNavigator, AccountFragment.LogoutNavigator {
 
     private ActivityMainBinding binding;
     private boolean isLoggedIn = false;
     private SharedPreferences sharedPreferences;
 
     @Override
-    public void onLoginSuccess(String username) {
+    public void onLoginSuccess(String userId, String username) {
         isLoggedIn = true;
 
-        // Store login state and username in SharedPreferences
+        // Store login state, userId, and username in SharedPreferences
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("isLoggedIn", true);
+        editor.putString("userId", userId);
         editor.putString("username", username);
+        // Password is not stored in SharedPreferences for security.
+        // AccountViewModel requests it when needed.
         editor.apply();
 
         binding.bottomNavigationView.setVisibility(View.VISIBLE);
@@ -40,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
 
     @Override
     public void onAccountDeletionSuccessNavigation() {
-        // Clear login state
         isLoggedIn = false;
 
         // Clear all user data from SharedPreferences
@@ -53,27 +55,25 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
     }
 
     @Override
+    public void onLogoutSuccessNavigation() {
+        isLoggedIn = false;
+        // SharedPreferences are cleared by AccountViewModel's logout method.
+        navigateToLoginFragment();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Initialize SharedPreferences
         sharedPreferences = getSharedPreferences("my_app", Context.MODE_PRIVATE);
-
-        // Inflate the binding
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Retrieve login state from SharedPreferences
         isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false);
 
-        if (!isLoggedIn) {
-            navigateToLoginFragment();
-        } else {
-            replaceFragment(new HomeFragment());
-            binding.bottomNavigationView.setVisibility(View.VISIBLE);
-        }
+        // Always navigate to LoginFragment on app start
+        navigateToLoginFragment();
 
-        // Set up bottom navigation listener
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
@@ -104,16 +104,11 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
     }
 
     private void replaceFragment(Fragment fragment) {
-        // Null check for safety
         if (fragment == null) return;
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-        // Replace the current fragment in frame_layout
         fragmentTransaction.replace(R.id.frame_layout, fragment);
-
-        // Commit the transaction
         fragmentTransaction.commit();
     }
 
@@ -122,19 +117,16 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
         // Clear the fragment back stack completely
         fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
-        // Replace with LoginFragment
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.frame_layout, new LoginFragment());
         fragmentTransaction.commit();
 
-        // Hide BottomNavigationView
         binding.bottomNavigationView.setVisibility(View.GONE);
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        // Save login state
         outState.putBoolean("isLoggedIn", isLoggedIn);
     }
 

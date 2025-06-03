@@ -2,15 +2,14 @@ package com.example.carwatch.ui.history;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
-import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,7 +39,7 @@ public class HistoryFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Wrap the current context with your AppTheme
+        // Wrap the current context with AppTheme for consistent styling
         Context themedContext = new ContextThemeWrapper(requireContext(), R.style.AppTheme);
         LayoutInflater themedInflater = inflater.cloneInContext(themedContext);
         return themedInflater.inflate(R.layout.fragment_history, container, false);
@@ -55,8 +54,8 @@ public class HistoryFragment extends Fragment {
         setupDatePicker();
         setupButtons();
 
-        // Set the etDate field to today's date upon fragment creation
-        setCurrentDate();
+        // Initial load: Set to today's date and fetch/filter
+        setCurrentDateAndFetch();
     }
 
     private void initializeViews(View view) {
@@ -70,14 +69,12 @@ public class HistoryFragment extends Fragment {
     }
 
     private void setupViewModel() {
-        viewModel = new ViewModelProvider(this).get(HistoryViewModel.class); // Removed the factory
-        viewModel.getHistoryItems().observe(getViewLifecycleOwner(), historyItems -> {
-            updateUI(historyItems);
-        });
+        viewModel = new ViewModelProvider(this).get(HistoryViewModel.class);
+        viewModel.getHistoryUiItems().observe(getViewLifecycleOwner(), this::updateUI);
     }
 
     private void setupRecyclerView() {
-        adapter = new HistoryAdapter(viewModel.getHistoryItems().getValue());
+        adapter = new HistoryAdapter(new ArrayList<>());
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
     }
@@ -97,8 +94,6 @@ public class HistoryFragment extends Fragment {
                     SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
                     String selectedDate = sdf.format(calendar.getTime());
                     etDate.setText(selectedDate);
-                    // **Remove** filtering here
-                    // viewModel.filterHistoryByDate(selectedDate);
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -110,35 +105,38 @@ public class HistoryFragment extends Fragment {
     private void setupButtons() {
         btnSearch.setOnClickListener(v -> {
             String selectedDate = etDate.getText().toString();
+            if (selectedDate.isEmpty()) {
+                Toast.makeText(requireContext(), "Please select a date.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             viewModel.filterHistoryByDate(selectedDate);
         });
 
         btnClear.setOnClickListener(v -> {
-                    viewModel.clearHistory();
-                    updateUI(new ArrayList<HistoryViewModel.HistoryItem>());
-                }
-        );
+            viewModel.clearDisplayedHistory(); // Clears the displayed list
+            etDate.setText(""); // Optionally clear the date field
+        });
 
         btnToday.setOnClickListener(v -> {
-            setCurrentDate();
+            setCurrentDateAndFetch();
         });
     }
 
-    private void updateUI(List<HistoryViewModel.HistoryItem> historyItems) {
-        if (historyItems == null || historyItems.isEmpty()) {
+    private void updateUI(List<HistoryViewModel.UiHistoryItem> uiHistoryItems) {
+        if (uiHistoryItems == null || uiHistoryItems.isEmpty()) {
             tvNoActivity.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
         } else {
             tvNoActivity.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
-            adapter.updateData(historyItems);
         }
+        adapter.updateData(uiHistoryItems);
     }
 
-    private void setCurrentDate() {
+    private void setCurrentDateAndFetch() {
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
         String today = sdf.format(Calendar.getInstance().getTime());
         etDate.setText(today);
-        viewModel.filterHistoryByDate(today);
+        viewModel.filterHistoryByDate(today); // This will fetch if allFetchedHistoryData is empty, then filter
     }
 }

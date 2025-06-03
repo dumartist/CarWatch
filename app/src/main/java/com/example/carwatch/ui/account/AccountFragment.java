@@ -1,13 +1,14 @@
 package com.example.carwatch.ui.account;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -23,25 +24,32 @@ public class AccountFragment extends Fragment {
 
     private AccountViewModel viewModel;
     private FragmentAccountBinding binding;
-    private SharedPreferences sharedPreferences;
 
     private AccountDeletionNavigator accountDeletionNavigator;
+    private LogoutNavigator logoutNavigator;
 
     public interface AccountDeletionNavigator {
         void onAccountDeletionSuccessNavigation();
     }
 
+    public interface LogoutNavigator {
+        void onLogoutSuccessNavigation();
+    }
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        // Check if the hosting Activity implements the required interface
+        // Check if the hosting Activity implements the required interfaces
         if (context instanceof AccountDeletionNavigator) {
             accountDeletionNavigator = (AccountDeletionNavigator) context;
         } else {
             throw new RuntimeException(context.toString() + " must implement AccountDeletionNavigator");
         }
-        // Initialize SharedPreferences here, primarily for theme preference
-        sharedPreferences = requireActivity().getSharedPreferences("my_app", Context.MODE_PRIVATE);
+        if (context instanceof LogoutNavigator) {
+            logoutNavigator = (LogoutNavigator) context;
+        } else {
+            throw new RuntimeException(context.toString() + " must implement LogoutNavigator");
+        }
     }
 
     @Override
@@ -59,14 +67,11 @@ public class AccountFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this).get(AccountViewModel.class);
 
-        // Setup UI components and Observers
         setupUserInfoDisplay();
         setupObservers();
         setupListeners();
-        setupThemeSwitch();
     }
 
-    // Get current username from ViewModel and update the TextView
     private void setupUserInfoDisplay() {
         // Access the username via the ViewModel, which gets it from its SharedPreferences instance
         String username = viewModel.getCurrentUsernameFromSharedPreferences();
@@ -78,28 +83,23 @@ public class AccountFragment extends Fragment {
     }
 
     private void setupObservers() {
-        // Observe operation status
         viewModel.getOperationStatus().observe(getViewLifecycleOwner(), status -> {
             switch (status) {
                 case LOADING:
                     Log.d("AccountFragment", "Operation Status: LOADING");
                     break;
                 case SUCCESS:
-                    // Hide loading indicator
                     Log.d("AccountFragment", "Operation Status: SUCCESS");
                     break;
                 case ERROR:
-                    // Hide loading indicator and show generic error
                     Log.d("AccountFragment", "Operation Status: ERROR");
                     break;
-                case IDLE:
-                    // Initial state or after an operation completes
+                case IDLE: // Initial state or after an operation completes
                     Log.d("AccountFragment", "Operation Status: IDLE");
                     break;
             }
         });
 
-        // Observe username update success event
         viewModel.getUsernameUpdateSuccess().observe(getViewLifecycleOwner(), isSuccess -> {
             if (isSuccess) {
                 setupUserInfoDisplay();
@@ -107,7 +107,6 @@ public class AccountFragment extends Fragment {
             }
         });
 
-        // Observe password update success event
         viewModel.getPasswordUpdateSuccess().observe(getViewLifecycleOwner(), isSuccess -> {
             if (isSuccess) {
                 clearPasswordFields();
@@ -116,7 +115,6 @@ public class AccountFragment extends Fragment {
         });
 
 
-        // Observe account deletion success event
         viewModel.getAccountDeletionSuccess().observe(getViewLifecycleOwner(), isSuccess -> {
             if (isSuccess) {
                 if (accountDeletionNavigator != null) {
@@ -125,16 +123,26 @@ public class AccountFragment extends Fragment {
                 viewModel.resetAccountDeletionSuccess();
             }
         });
+
+        viewModel.getLogoutSuccess().observe(getViewLifecycleOwner(), isSuccess -> {
+            if (isSuccess) {
+                if (logoutNavigator != null) {
+                    logoutNavigator.onLogoutSuccessNavigation();
+                }
+                viewModel.resetLogoutSuccess();
+            }
+        });
     }
 
     private void setupListeners() {
         binding.btnUpdateName.setOnClickListener(v -> {
             String newName = binding.etNewName.getText().toString().trim();
-            if (!newName.isEmpty()) {
-                viewModel.updateName(newName);
-            } else {
+            if (newName.isEmpty()) {
                 Toast.makeText(requireContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
             }
+            // Directly update the name
+            viewModel.updateName(newName);
         });
 
         binding.btnUpdatePassword.setOnClickListener(v -> {
@@ -162,24 +170,57 @@ public class AccountFragment extends Fragment {
         binding.btnRemoveAccount.setOnClickListener(v -> {
             showAccountRemovalConfirmation();
         });
-    }
 
-    private void setupThemeSwitch() {
-        // Set initial switch state
-        boolean isDarkModeEnabled = sharedPreferences.getBoolean("dark_mode", false);
-        binding.switchDarkMode.setChecked(isDarkModeEnabled);
-
-        binding.switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            sharedPreferences.edit().putBoolean("dark_mode", isChecked).apply();
+        binding.btnLogout.setOnClickListener(v -> {
+            showLogoutConfirmationDialog();
         });
     }
 
     private void showAccountRemovalConfirmation() {
+        // The Flask backend requires the current password for account deletion.
+        showPasswordConfirmationDialog("Remove Account",
+                "Are you sure you want to remove your account? This action is irreversible. Enter current password to confirm.",
+                currentPassword -> {
+                    if (currentPassword != null && !currentPassword.isEmpty()) {
+                        viewModel.deleteAccount(currentPassword);
+                    } else {
+                        Toast.makeText(requireContext(), "Current password is required to delete account.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void showPasswordConfirmationDialog(String title, String message, PasswordConfirmationListener listener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle(title);
+        builder.setMessage(message);
+
+        final EditText input = new EditText(requireContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        input.setHint("Current Password");
+        builder.setView(input);
+
+        builder.setPositiveButton(android.R.string.yes, (dialog, which) -> {
+            listener.onPasswordConfirmed(input.getText().toString());
+        });
+        builder.setNegativeButton(android.R.string.no, (dialog, which) -> {
+            dialog.cancel();
+            listener.onPasswordConfirmed(null); // Indicate cancellation or no password entered
+        });
+        builder.setIcon(R.drawable.ic_dialog_alert);
+        builder.show();
+    }
+
+    interface PasswordConfirmationListener {
+        void onPasswordConfirmed(String password);
+    }
+
+
+    private void showLogoutConfirmationDialog() {
         new AlertDialog.Builder(requireContext())
-                .setTitle("Remove Account")
-                .setMessage("Are you sure you want to remove your account? This action is irreversible.")
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
                 .setPositiveButton(android.R.string.yes, (dialog, which) -> {
-                    viewModel.deleteAccount();
+                    viewModel.logout();
                 })
                 .setNegativeButton(android.R.string.no, null)
                 .setIcon(R.drawable.ic_dialog_alert)
@@ -195,14 +236,14 @@ public class AccountFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        // Clear the reference to the navigator to prevent leaks
+        // Clear references to avoid leaks
         accountDeletionNavigator = null;
+        logoutNavigator = null;
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Clear binding to avoid memory leaks
-        binding = null;
+        binding = null; // Clear binding to avoid memory leaks
     }
 }

@@ -36,30 +36,22 @@ public class WeatherFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Initialize ViewModel
         weatherViewModel = new ViewModelProvider(this).get(WeatherViewModel.class);
 
-        // Setup Observers
         setupObservers();
-
-        // Setup Button Listener
         setupButtonListener();
 
-        // Initial weather fetch
         weatherViewModel.fetchWeatherData("Jakarta");
     }
 
     private void setupObservers() {
-        // Observe Weather Data
         weatherViewModel.weatherData.observe(getViewLifecycleOwner(), weatherData -> {
-            // Update UI with weather data
             binding.cityNameText.setText(weatherData.getCityName());
             binding.temperatureText.setText(String.format("%.0f°", weatherData.getTemperature()));
             binding.humidityText.setText(String.format("%.0f%%", weatherData.getHumidity()));
             binding.windText.setText(String.format("%.0f km/h", weatherData.getWindSpeed()));
             binding.descriptionText.setText(weatherData.getDescription());
 
-            // Set Weather Icon
             String resourceName = "ic_" + weatherData.getIconCode();
             int resId = getResources().getIdentifier(resourceName, "drawable", requireContext().getPackageName());
             if (resId != 0) {
@@ -67,7 +59,6 @@ public class WeatherFragment extends Fragment {
             }
         });
 
-        // Observe Error Messages
         weatherViewModel.errorMessage.observe(getViewLifecycleOwner(), errorMsg -> {
             if (errorMsg != null) {
                 Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();

@@ -3,261 +3,226 @@ package com.example.carwatch.ui.history;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
+import java.util.stream.Collectors;
+
+import com.example.carwatch.model.HistoryData;
+import com.example.carwatch.model.HistoryResponse;
+import com.example.carwatch.network.ApiService;
+import com.example.carwatch.network.RetrofitClient;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HistoryViewModel extends AndroidViewModel {
 
-    public static class HistoryItem {
-        private String title;
-        private String timestamp;
-        private String details;
-        private String date;
-        private String plate;
+    // UiHistoryItem is used for displaying history in the UI.
+    // It can be derived from model.HistoryData.
+    public static class UiHistoryItem {
+        private String title;       // Corresponds to HistoryData.subject
+        private String timestamp;   // Formatted HistoryData.date (full date and time)
+        private String details;     // Corresponds to HistoryData.description
+        private String dateOnly;    // Formatted HistoryData.date (date part only for filtering)
+        private String plate;       // Corresponds to HistoryData.plate
 
-        public HistoryItem(String title, String timestamp, String details, String date, String plate) {
+        public UiHistoryItem(String title, String timestamp, String details, String dateOnly, String plate) {
             this.title = title;
             this.timestamp = timestamp;
             this.details = details;
-            this.date = date;
+            this.dateOnly = dateOnly;
             this.plate = plate;
         }
 
-        // Getters
         public String getTitle() { return title; }
         public String getTimestamp() { return timestamp; }
         public String getDetails() { return details; }
-        public String getDate() { return date; }
+        public String getDateOnly() { return dateOnly; }
         public String getPlate() { return plate; }
     }
 
-    private MutableLiveData<List<HistoryItem>> historyItems = new MutableLiveData<>();
-    private SharedPreferences sharedPreferences;
-    private String userId;
+    private final MutableLiveData<List<UiHistoryItem>> historyUiItems = new MutableLiveData<>();
+    private List<HistoryData> allFetchedHistoryData = new ArrayList<>(); // Stores all data from a successful fetch
+    private final ApiService apiService;
+    private final SharedPreferences sharedPreferences; // Kept for userId
+    private final String userId;
 
     public HistoryViewModel(@NonNull Application application) {
         super(application);
+        apiService = RetrofitClient.getApiService();
         sharedPreferences = application.getSharedPreferences("my_app", Context.MODE_PRIVATE);
         userId = sharedPreferences.getString("userId", null);
-        if (userId != null) {
-            fetchHistoryData(userId);
-        } else {
-            Log.e("HistoryViewModel", "UserId not found in SharedPreferences");
-            historyItems.setValue(new ArrayList<>());
+
+        if (userId == null) {
+            Log.e("HistoryViewModel", "UserId not found in SharedPreferences. Cannot fetch history.");
+            historyUiItems.setValue(new ArrayList<>());
         }
     }
 
-    public LiveData<List<HistoryItem>> getHistoryItems() {
-        return historyItems;
+    public LiveData<List<UiHistoryItem>> getHistoryUiItems() {
+        return historyUiItems;
     }
 
-    public String getUserId() {
-        return userId;
-    }
+    public void fetchAllHistoryData() {
+        if (userId == null) {
+            Toast.makeText(getApplication(), "User not logged in. Cannot fetch history.", Toast.LENGTH_SHORT).show();
+            historyUiItems.setValue(new ArrayList<>());
+            return;
+        }
 
-    public void fetchHistoryData(String userId) {
-        new FetchHistoryTask().execute(userId);
-    }
-
-    private class FetchHistoryTask extends AsyncTask<String, Void, List<HistoryItem>> {
-        @Override
-        protected List<HistoryItem> doInBackground(String... params) {
-            String userId = params[0];
-            List<HistoryItem> result = new ArrayList<>();
-
-            try {
-                URL url = new URL("http://192.168.1.4/carwatch/history_select.php");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setDoOutput(true);
-                conn.setDoInput(true);
-
-                String postData = "user_id=" + userId;
-                byte[] postDataBytes = postData.getBytes(StandardCharsets.UTF_8);
-
-                DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-                wr.write(postDataBytes);
-                wr.flush();
-                wr.close();
-
-                int responseCode = conn.getResponseCode();
-
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    InputStream inputStream = conn.getInputStream();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-
-                    try {
-                        JSONObject jsonResponse = new JSONObject(response.toString());
-                        if (jsonResponse.getBoolean("success")) {
-                            JSONArray data = jsonResponse.getJSONArray("data");
-                            for (int i = 0; i < data.length(); i++) {
-                                JSONObject historyObject = data.getJSONObject(i);
-                                String subject = historyObject.getString("subject");
-                                String plate = historyObject.getString("plate");
-                                String description = historyObject.getString("description");
-                                String rawDate = historyObject.getString("date");
-                                Log.d("FetchHistoryTask", "Raw Date from DB: " + rawDate);
-
-                                // Format the date to dd-MM-yyyy hh:mm a
-                                String formattedDate = formatDate(rawDate);
-
-                                HistoryItem historyItem = new HistoryItem(subject, formattedDate, description, extractDate(formattedDate), plate);
-                                result.add(historyItem);
-                            }
-                        } else {
-                            Log.e("FetchHistoryTask", "Error: " + jsonResponse.getString("message"));
-                        }
-                    } catch (JSONException e) {
-                        Log.e("FetchHistoryTask", "JSON Parsing Error: " + e.getMessage());
+        apiService.getHistory().enqueue(new Callback<HistoryResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<HistoryResponse> call, @NonNull Response<HistoryResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    HistoryResponse historyResponse = response.body();
+                    if (historyResponse.isSuccess() && historyResponse.getData() != null) {
+                        allFetchedHistoryData = historyResponse.getData();
+                        historyUiItems.setValue(convertToUiItems(allFetchedHistoryData));
+                    } else {
+                        Log.e("HistoryViewModel", "Fetching history failed: " + historyResponse.getMessage());
+                        Toast.makeText(getApplication(), "Failed to load history: " + historyResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        historyUiItems.setValue(new ArrayList<>());
                     }
                 } else {
-                    Log.e("FetchHistoryTask", "HTTP Error: " + responseCode);
+                    Log.e("HistoryViewModel", "Fetching history error: " + response.code());
+                    Toast.makeText(getApplication(), "Error loading history: " + response.code(), Toast.LENGTH_SHORT).show();
+                    historyUiItems.setValue(new ArrayList<>());
                 }
-
-                conn.disconnect();
-
-            } catch (IOException e) {
-                Log.e("FetchHistoryTask", "Network Error: " + e.getMessage());
             }
 
-            return result;
-        }
-
-
-        private String formatDate(String rawDate) {
-            try {
-                SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-                SimpleDateFormat outputFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm a", Locale.US);
-                Date date = inputFormat.parse(rawDate);
-                return outputFormat.format(date);
-            } catch (ParseException e) {
-                Log.e("FetchHistoryTask", "Date Parsing Error: " + e.getMessage());
-                return "N/A";
+            @Override
+            public void onFailure(@NonNull Call<HistoryResponse> call, @NonNull Throwable t) {
+                Log.e("HistoryViewModel", "Network error fetching history: " + t.getMessage(), t);
+                Toast.makeText(getApplication(), "Network error. Could not load history.", Toast.LENGTH_SHORT).show();
+                historyUiItems.setValue(new ArrayList<>());
             }
+        });
+    }
+
+    private List<UiHistoryItem> convertToUiItems(List<HistoryData> historyDataList) {
+        List<UiHistoryItem> uiItems = new ArrayList<>();
+        for (HistoryData data : historyDataList) {
+            String formattedTimestamp = formatRawDateToTimestamp(data.getDate());
+            String dateOnly = formatRawDateToDateOnly(data.getDate());
+            uiItems.add(new UiHistoryItem(data.getSubject(), formattedTimestamp, data.getDescription(), dateOnly, data.getPlate()));
         }
+        return uiItems;
+    }
 
-        private String extractDate(String formattedDate){
-            try{
-                SimpleDateFormat inputFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm a", Locale.US);
-                SimpleDateFormat outputFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-                Date date = inputFormat.parse(formattedDate);
-                return outputFormat.format(date);
-            }catch (ParseException e) {
-                Log.e("FetchHistoryTask", "Date Parsing Error: " + e.getMessage());
-                return "N/A";
-            }
+    // rawDate is expected in "EEE, dd MMM yyyy HH:mm:ss zzz" format, assumed to be UTC/GMT
+    private String formatRawDateToTimestamp(String rawDate) {
+        try {
+            // Input format from backend
+            SimpleDateFormat inputFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
+            inputFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Assume input is UTC
+
+            // Desired output format for display
+            SimpleDateFormat outputFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm a", Locale.US);
+            outputFormat.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
+            ; // Format for device's local timezone
+
+            Date date = inputFormat.parse(rawDate);
+            return outputFormat.format(date);
+        } catch (ParseException e) {
+            Log.e("HistoryViewModel", "Timestamp Parsing Error for date '" + rawDate + "': " + e.getMessage());
+            return rawDate; // Return raw if parsing fails
         }
+    }
 
+    // rawDate is expected in "EEE, dd MMM yyyy HH:mm:ss zzz" format, assumed to be UTC/GMT
+    private String formatRawDateToDateOnly(String rawDate) {
+        try {
+            // Input format from backend
+            SimpleDateFormat inputFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
+            inputFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Assume input is UTC
 
-        @Override
-        protected void onPostExecute(List<HistoryItem> historyItems) {
-            HistoryViewModel.this.historyItems.setValue(historyItems);
-            saveHistoryData(historyItems);
-        }
+            // Desired output format for filtering
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+            outputFormat.setTimeZone(TimeZone.getDefault()); // Format for device's local timezone (important for date boundary)
 
-        private void saveHistoryData(List<HistoryItem> historyItems) {
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            // Clear old data
-            editor.remove("history_data");
-
-            // Convert historyItems to JSON and save
-            JSONArray jsonArray = new JSONArray();
-            for (HistoryItem item : historyItems) {
-                JSONObject jsonItem = new JSONObject();
+            Date date = inputFormat.parse(rawDate);
+            return outputFormat.format(date);
+        } catch (ParseException e) {
+            Log.e("HistoryViewModel", "DateOnly Parsing Error for date '" + rawDate + "': " + e.getMessage());
+            // Fallback for unexpected yyyy-MM-dd format
+            if (rawDate != null && rawDate.contains("-")) { // Basic check for yyyy-MM-dd structure
                 try {
-                    jsonItem.put("title", item.getTitle());
-                    jsonItem.put("timestamp", item.getTimestamp());
-                    jsonItem.put("details", item.getDetails());
-                    jsonItem.put("date", item.getDate());
-                    jsonItem.put("plate", item.getPlate());
-                    jsonArray.put(jsonItem);
-                } catch (JSONException e) {
-                    Log.e("HistoryViewModel", "JSON Encode Error: " + e.getMessage());
+                    // This fallback assumes the yyyy-MM-dd string is a UTC date.
+                    // For correct date boundary, it should also be parsed as UTC then formatted to local.
+                    String datePart = rawDate.substring(0, 10); // Assuming yyyy-MM-dd
+                    SimpleDateFormat inputFormatSimple = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                    inputFormatSimple.setTimeZone(TimeZone.getTimeZone("UTC")); // Treat as UTC date
+
+                    SimpleDateFormat outputFormatSimple = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+                    outputFormatSimple.setTimeZone(TimeZone.getDefault()); // Convert to local date
+
+                    Date simpleDate = inputFormatSimple.parse(datePart);
+                    return outputFormatSimple.format(simpleDate);
+                } catch (ParseException | StringIndexOutOfBoundsException ex) {
+                    Log.e("HistoryViewModel", "Fallback DateOnly Parsing Error for date '" + rawDate + "': " + ex.getMessage());
                 }
             }
-            editor.putString("history_data", jsonArray.toString());
-            editor.apply();
+            return "N/A";
         }
     }
 
-    public void clearHistory() {
-        historyItems.setValue(new ArrayList<>());
-    }
-
-    private List<HistoryItem> loadHistoryDataFromSharedPreferences() {
-        List<HistoryItem> historyItems = new ArrayList<>();
-        String historyDataJson = sharedPreferences.getString("history_data", null);
-
-        if (historyDataJson != null) {
-            try {
-                JSONArray jsonArray = new JSONArray(historyDataJson);
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject jsonItem = jsonArray.getJSONObject(i);
-                    String title = jsonItem.getString("title");
-                    String timestamp = jsonItem.getString("timestamp");
-                    String details = jsonItem.getString("details");
-                    String date = jsonItem.getString("date");
-                    String plate = jsonItem.getString("plate");
-
-                    HistoryItem historyItem = new HistoryItem(title, timestamp, details, date, plate);
-                    historyItems.add(historyItem);
-                }
-            } catch (JSONException e) {
-                Log.e("HistoryViewModel", "JSON Decode Error: " + e.getMessage());
-            }
-        }
-        return historyItems;
-    }
-
+    // selectedDate is in MM/dd/yyyy format
     public void filterHistoryByDate(String selectedDate) {
-        List<HistoryItem> currentItems = historyItems.getValue();
-
-        List<HistoryItem> sharedPrefItems = loadHistoryDataFromSharedPreferences();
-
-        // If SharedPreferences has data, use it; otherwise, fetch from the server
-        if (!sharedPrefItems.isEmpty()) {
-            currentItems = sharedPrefItems;
+        if (allFetchedHistoryData.isEmpty()) {
+            // If no data has been fetched yet, fetch it first, then filter.
+            apiService.getHistory().enqueue(new Callback<HistoryResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<HistoryResponse> call, @NonNull Response<HistoryResponse> response) {
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        allFetchedHistoryData = response.body().getData();
+                        applyFilter(selectedDate);
+                    } else {
+                        Toast.makeText(getApplication(), "Could not load history to filter.", Toast.LENGTH_SHORT).show();
+                        historyUiItems.setValue(new ArrayList<>());
+                    }
+                }
+                @Override
+                public void onFailure(@NonNull Call<HistoryResponse> call, @NonNull Throwable t) {
+                    Toast.makeText(getApplication(), "Network error. Could not filter history.", Toast.LENGTH_SHORT).show();
+                    historyUiItems.setValue(new ArrayList<>());
+                }
+            });
         } else {
-            fetchHistoryData(userId);
-            return; // Return after fetching data
+            // Data already fetched, just apply filter
+            applyFilter(selectedDate);
         }
+    }
 
-        List<HistoryItem> filteredItems = new ArrayList<>();
-        for (HistoryItem item : currentItems) {
-            if (item.getDate() != null && item.getDate().equals(selectedDate)) {
-                filteredItems.add(item);
-            }
-        }
-        historyItems.setValue(filteredItems);
+    // selectedDate is in MM/dd/yyyy format
+    private void applyFilter(String selectedDate) {
+        List<UiHistoryItem> filteredUiItems = allFetchedHistoryData.stream()
+                .map(data -> {
+                    String formattedTimestamp = formatRawDateToTimestamp(data.getDate());
+                    String dateOnly = formatRawDateToDateOnly(data.getDate());
+                    return new UiHistoryItem(data.getSubject(), formattedTimestamp, data.getDescription(), dateOnly, data.getPlate());
+                })
+                .filter(uiItem -> uiItem.getDateOnly().equals(selectedDate))
+                .collect(Collectors.toList());
+        historyUiItems.setValue(filteredUiItems);
+    }
+
+    public void clearDisplayedHistory() {
+        // Clears the LiveData, effectively clearing the UI list.
+        // Does not delete from the server or the 'allFetchedHistoryData' cache.
+        historyUiItems.setValue(new ArrayList<>());
     }
 }
