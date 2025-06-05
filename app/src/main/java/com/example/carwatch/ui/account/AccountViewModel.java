@@ -32,7 +32,7 @@ public class AccountViewModel extends AndroidViewModel {
 
 
     private SharedPreferences sharedPreferences;
-    private String userId; // Still useful for client-side checks or if some future endpoint needs it
+    private String userId;
     private ApiService apiService;
 
     public enum OperationStatus {
@@ -42,7 +42,7 @@ public class AccountViewModel extends AndroidViewModel {
     public AccountViewModel(@NonNull Application application) {
         super(application);
         sharedPreferences = application.getSharedPreferences("my_app", Context.MODE_PRIVATE);
-        userId = sharedPreferences.getString("userId", null); // Keep for potential client-side logic
+        userId = sharedPreferences.getString("userId", null);
         apiService = RetrofitClient.getApiService();
     }
 
@@ -91,8 +91,6 @@ public class AccountViewModel extends AndroidViewModel {
         return sharedPreferences.getString("username", null);
     }
 
-    // This method might be used by AccountFragment to get the password for API calls.
-    // Ensure this is handled securely if used.
     private String getCurrentPasswordFromSharedPreferences() {
         if (sharedPreferences == null) {
             Log.e("AccountViewModel", "SharedPreferences not initialized.");
@@ -101,9 +99,7 @@ public class AccountViewModel extends AndroidViewModel {
         return sharedPreferences.getString("password", null);
     }
 
-
     public void updateName(String newName) {
-        // userId check can remain for client-side validation if user is logged in locally
         if (userId == null) {
             Log.e("AccountViewModel", "User ID is not set locally. Cannot update name.");
             operationStatus.setValue(OperationStatus.ERROR);
@@ -123,12 +119,11 @@ public class AccountViewModel extends AndroidViewModel {
                     ServerResponse serverResponse = response.body();
                     if (serverResponse.isSuccess()) {
                         SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("username", newName); // Update local username
+                        editor.putString("username", newName);
                         editor.apply();
 
                         usernameUpdateSuccess.setValue(true);
                         operationStatus.setValue(OperationStatus.SUCCESS);
-                        // Use server message if available, otherwise generic
                         String message = serverResponse.getMessage() != null ? serverResponse.getMessage() : "Username updated successfully";
                         Toast.makeText(getApplication(), message, Toast.LENGTH_SHORT).show();
                     } else {
@@ -279,10 +274,9 @@ public class AccountViewModel extends AndroidViewModel {
                     operationStatus.setValue(OperationStatus.SUCCESS);
                     Toast.makeText(getApplication(), "Logged out successfully", Toast.LENGTH_SHORT).show();
                 } else {
-                    // Even if server logout fails, still clear local data as a fallback.
                     Log.e("Logout", "Server logout failed or returned error. Proceeding with local logout.");
-                    clearLocalSessionData(); // Fallback: clear local data anyway
-                    logoutSuccess.setValue(true); // Indicate local logout happened
+                    clearLocalSessionData();
+                    logoutSuccess.setValue(true);
                     operationStatus.setValue(OperationStatus.ERROR);
                     String errorMessage = "Logout failed on server, but local session cleared.";
                     if (response.body() != null && response.body().getMessage() != null) {
@@ -297,9 +291,8 @@ public class AccountViewModel extends AndroidViewModel {
             @Override
             public void onFailure(@NonNull Call<ServerResponse> call, @NonNull Throwable t) {
                 Log.e("Logout", "Error connecting to server for logout: " + t.getMessage(), t);
-                // Fallback: clear local data even if network call fails
                 clearLocalSessionData();
-                logoutSuccess.setValue(true); // Indicate local logout happened
+                logoutSuccess.setValue(true);
                 operationStatus.setValue(OperationStatus.ERROR);
                 Toast.makeText(getApplication(), "Error connecting to server. Logged out locally.", Toast.LENGTH_SHORT).show();
             }
@@ -311,8 +304,7 @@ public class AccountViewModel extends AndroidViewModel {
         editor.remove("isLoggedIn");
         editor.remove("userId");
         editor.remove("username");
-        editor.remove("password"); // Or any other sensitive data
-        // Consider editor.clear() if all shared prefs are user-specific for this session
+        editor.remove("password");
         editor.apply();
     }
 }

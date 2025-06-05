@@ -14,20 +14,14 @@ import retrofit2.http.POST;
 
 public interface ApiService {
 
-    @POST("user/update/username") // Endpoint to update username
-    Call<ServerResponse> updateUser(
-            @Body Map<String, String> body
-    );
+    @POST("user/update/username")
+    Call<ServerResponse> updateUser(@Body Map<String, String> body);
 
-    @POST("user/update/password") // Endpoint to update password
-    Call<ServerResponse> updatePassword(
-            @Body Map<String, String> body
-    );
+    @POST("user/update/password")
+    Call<ServerResponse> updatePassword(@Body Map<String, String> body);
 
-    @POST("user/delete") // Endpoint to delete user account
-    Call<ServerResponse> deleteUser(
-            @Body Map<String, String> body
-    );
+    @POST("user/delete")
+    Call<ServerResponse> deleteUser(@Body Map<String, String> body);
 
     @POST("login")
     Call<LoginResponse> login(@Body Map<String, String> body);
@@ -35,10 +29,9 @@ public interface ApiService {
     @POST("register")
     Call<RegisterResponse> register(@Body Map<String, String> body);
 
-    @POST("logout") // Endpoint for server-side logout
+    @POST("logout")
     Call<ServerResponse> logout();
     
-    @GET("history/get") // Endpoint to fetch all history for the logged-in user (Flask uses session)
+    @GET("history/get")
     Call<HistoryResponse> getHistory();
-
 }

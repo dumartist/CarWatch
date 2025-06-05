@@ -56,10 +56,8 @@ public class LoginFragment extends Fragment {
         etConfirmPassword = binding.etConfirmPassword;
         btnCreateAccount = binding.btnCreateAccount;
 
-        // If "Create Account" is clicked, switch to the sign-up form
         tvCreateAccount.setOnClickListener(v -> viewSwitcher.showNext());
 
-        // If "Sign In" is clicked, switch back to the login form
         tvSignIn.setOnClickListener(v -> viewSwitcher.showPrevious());
 
         btnSignIn.setOnClickListener(v -> {
@@ -99,7 +97,6 @@ public class LoginFragment extends Fragment {
                 String userId = String.valueOf(loginResult.getSuccessData().getUserId());
                 String username = loginResult.getSuccessData().getUsername();
 
-                // Call the interface method with the userId and username
                 if (loginSuccessListener != null) {
                     loginSuccessListener.onLoginSuccess(userId, username);
                 } else {
@@ -116,8 +113,7 @@ public class LoginFragment extends Fragment {
 
             Toast.makeText(getActivity(), registerResult.getMessage(), Toast.LENGTH_SHORT).show();
             if (registerResult.isSuccess()) {
-                viewSwitcher.showPrevious(); // Switch to login view
-                // Clear registration fields
+                viewSwitcher.showPrevious();
                 etSignUpUsername.setText("");
                 etSignUpPassword.setText("");
                 etConfirmPassword.setText("");
@@ -137,7 +133,7 @@ public class LoginFragment extends Fragment {
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         if (context instanceof OnLoginSuccessListener) {
-            loginSuccessListener = (OnLoginSuccessListener) context; // Assign the listener
+            loginSuccessListener = (OnLoginSuccessListener) context;
         } else {
             throw new ClassCastException(context.toString()
                     + " must implement LoginFragment.OnLoginSuccessListener");
@@ -147,6 +143,6 @@ public class LoginFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        loginSuccessListener = null; // Avoid memory leaks
+        loginSuccessListener = null;
     }
 }

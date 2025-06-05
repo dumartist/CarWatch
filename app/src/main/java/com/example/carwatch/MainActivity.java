@@ -28,13 +28,10 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
     public void onLoginSuccess(String userId, String username) {
         isLoggedIn = true;
 
-        // Store login state, userId, and username in SharedPreferences
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("isLoggedIn", true);
         editor.putString("userId", userId);
         editor.putString("username", username);
-        // Password is not stored in SharedPreferences for security.
-        // AccountViewModel requests it when needed.
         editor.apply();
 
         binding.bottomNavigationView.setVisibility(View.VISIBLE);
@@ -45,19 +42,16 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
     public void onAccountDeletionSuccessNavigation() {
         isLoggedIn = false;
 
-        // Clear all user data from SharedPreferences
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.apply();
 
-        // Navigate back to the Login Fragment and clear the back stack
         navigateToLoginFragment();
     }
 
     @Override
     public void onLogoutSuccessNavigation() {
         isLoggedIn = false;
-        // SharedPreferences are cleared by AccountViewModel's logout method.
         navigateToLoginFragment();
     }
 
@@ -71,7 +65,6 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
 
         isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false);
 
-        // Always navigate to LoginFragment on app start
         navigateToLoginFragment();
 
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -85,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
             } else if (itemId == R.id.history) {
                 selectedFragment = new HistoryFragment();
             } else if (itemId == R.id.account) {
-                // AccountFragment should be accessible only if logged in
                 if (isLoggedIn) {
                     selectedFragment = new AccountFragment();
                 } else {
@@ -114,7 +106,6 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
 
     private void navigateToLoginFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        // Clear the fragment back stack completely
         fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();

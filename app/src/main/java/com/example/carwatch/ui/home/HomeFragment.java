@@ -45,30 +45,24 @@ public class HomeFragment extends Fragment {
                 String greeting = "Hello " + currentUsername;
                 binding.greetingText.setText(greeting);
             } else {
-                binding.greetingText.setText("Hello User"); // Default greeting
+                binding.greetingText.setText("Hello User");
             }
         });
 
         SwitchMaterial lampSwitch = binding.lampToggleSwitch;
         lampSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // TODO: Implement actual lamp control logic later on
+            // TODO: Implement actual lamp control logic
         });
 
         historyViewModel.getHistoryUiItems().observe(getViewLifecycleOwner(), this::updateCarDetectionInfo);
 
-        // Fetch initial history data if needed when HomeFragment becomes visible.
-        // This ensures data is loaded if the user navigates directly here after login
-        // or if it wasn't loaded by HistoryFragment yet.
         historyViewModel.fetchAllHistoryData();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh username when fragment resumes, in case it was changed elsewhere
         homeViewModel.loadUsername();
-        // Optionally, refresh history data as well if it might change frequently
-        // historyViewModel.fetchAllHistoryData(); 
     }
 
     private void updateCarDetectionInfo(List<HistoryViewModel.UiHistoryItem> uiHistoryItems) {
@@ -78,7 +72,6 @@ public class HomeFragment extends Fragment {
         TextView homeDescription = binding.homeDescription;
 
         if (uiHistoryItems != null && !uiHistoryItems.isEmpty()) {
-            // Get the latest history item
             HistoryViewModel.UiHistoryItem latestItem = uiHistoryItems.get(0);
 
             homeStatusTitle.setText(latestItem.getTitle());
@@ -87,7 +80,6 @@ public class HomeFragment extends Fragment {
             lastDetectionTime.setText(getString(R.string.last_detection, formattedTime));
             homeDescription.setText(latestItem.getDetails());
         } else {
-            // Handle the case where there is no history data
             homeStatusTitle.setText("No data available");
             homeCarNumber.setText("N/A");
             lastDetectionTime.setText(getString(R.string.last_detection, "N/A"));

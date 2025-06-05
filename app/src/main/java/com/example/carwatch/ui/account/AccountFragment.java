@@ -39,7 +39,6 @@ public class AccountFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        // Check if the hosting Activity implements the required interfaces
         if (context instanceof AccountDeletionNavigator) {
             accountDeletionNavigator = (AccountDeletionNavigator) context;
         } else {
@@ -73,7 +72,6 @@ public class AccountFragment extends Fragment {
     }
 
     private void setupUserInfoDisplay() {
-        // Access the username via the ViewModel, which gets it from its SharedPreferences instance
         String username = viewModel.getCurrentUsernameFromSharedPreferences();
         if (username != null) {
             binding.tvName.setText(username);
@@ -94,7 +92,7 @@ public class AccountFragment extends Fragment {
                 case ERROR:
                     Log.d("AccountFragment", "Operation Status: ERROR");
                     break;
-                case IDLE: // Initial state or after an operation completes
+                case IDLE:
                     Log.d("AccountFragment", "Operation Status: IDLE");
                     break;
             }
@@ -113,7 +111,6 @@ public class AccountFragment extends Fragment {
                 viewModel.resetPasswordUpdateSuccess();
             }
         });
-
 
         viewModel.getAccountDeletionSuccess().observe(getViewLifecycleOwner(), isSuccess -> {
             if (isSuccess) {
@@ -141,7 +138,6 @@ public class AccountFragment extends Fragment {
                 Toast.makeText(requireContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
             }
-            // Directly update the name
             viewModel.updateName(newName);
         });
 
@@ -177,7 +173,6 @@ public class AccountFragment extends Fragment {
     }
 
     private void showAccountRemovalConfirmation() {
-        // The Flask backend requires the current password for account deletion.
         showPasswordConfirmationDialog("Remove Account",
                 "Are you sure you want to remove your account? This action is irreversible. Enter current password to confirm.",
                 currentPassword -> {
@@ -204,7 +199,7 @@ public class AccountFragment extends Fragment {
         });
         builder.setNegativeButton(android.R.string.no, (dialog, which) -> {
             dialog.cancel();
-            listener.onPasswordConfirmed(null); // Indicate cancellation or no password entered
+            listener.onPasswordConfirmed(null);
         });
         builder.setIcon(R.drawable.ic_dialog_alert);
         builder.show();
@@ -213,7 +208,6 @@ public class AccountFragment extends Fragment {
     interface PasswordConfirmationListener {
         void onPasswordConfirmed(String password);
     }
-
 
     private void showLogoutConfirmationDialog() {
         new AlertDialog.Builder(requireContext())
@@ -236,7 +230,6 @@ public class AccountFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        // Clear references to avoid leaks
         accountDeletionNavigator = null;
         logoutNavigator = null;
     }
@@ -244,6 +237,6 @@ public class AccountFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        binding = null; // Clear binding to avoid memory leaks
+        binding = null;
     }
 }

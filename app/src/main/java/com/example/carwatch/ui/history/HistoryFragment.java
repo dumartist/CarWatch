@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class HistoryFragment extends Fragment {
     private HistoryViewModel viewModel;
@@ -39,7 +40,6 @@ public class HistoryFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Wrap the current context with AppTheme for consistent styling
         Context themedContext = new ContextThemeWrapper(requireContext(), R.style.AppTheme);
         LayoutInflater themedInflater = inflater.cloneInContext(themedContext);
         return themedInflater.inflate(R.layout.fragment_history, container, false);
@@ -54,7 +54,6 @@ public class HistoryFragment extends Fragment {
         setupDatePicker();
         setupButtons();
 
-        // Initial load: Set to today's date and fetch/filter
         setCurrentDateAndFetch();
     }
 
@@ -80,18 +79,27 @@ public class HistoryFragment extends Fragment {
     }
 
     private void setupDatePicker() {
-        // Set up date picker for end icon and edit text
         dateInputLayout.setEndIconOnClickListener(v -> showDatePickerDialog());
         etDate.setOnClickListener(v -> showDatePickerDialog());
     }
 
+    private void setCurrentDateAndFetch() {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"));
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
+        String today = sdf.format(calendar.getTime());
+        etDate.setText(today);
+        viewModel.filterHistoryByDate(today);
+    }
+
     private void showDatePickerDialog() {
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"));
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 requireContext(),
                 (view, year, month, dayOfMonth) -> {
                     calendar.set(year, month, dayOfMonth);
                     SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+                    sdf.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
                     String selectedDate = sdf.format(calendar.getTime());
                     etDate.setText(selectedDate);
                 },
@@ -113,8 +121,8 @@ public class HistoryFragment extends Fragment {
         });
 
         btnClear.setOnClickListener(v -> {
-            viewModel.clearDisplayedHistory(); // Clears the displayed list
-            etDate.setText(""); // Optionally clear the date field
+            viewModel.clearDisplayedHistory();
+            etDate.setText("");
         });
 
         btnToday.setOnClickListener(v -> {
@@ -131,12 +139,5 @@ public class HistoryFragment extends Fragment {
             recyclerView.setVisibility(View.VISIBLE);
         }
         adapter.updateData(uiHistoryItems);
-    }
-
-    private void setCurrentDateAndFetch() {
-        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-        String today = sdf.format(Calendar.getInstance().getTime());
-        etDate.setText(today);
-        viewModel.filterHistoryByDate(today); // This will fetch if allFetchedHistoryData is empty, then filter
     }
 }

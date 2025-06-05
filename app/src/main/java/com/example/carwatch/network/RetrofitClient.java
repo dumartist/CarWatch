@@ -11,7 +11,7 @@ import okhttp3.JavaNetCookieJar;
 
 public class RetrofitClient {
 
-    private static final String BASE_URL = "http://172.25.4.24:8000"; // Server base URL
+    private static final String BASE_URL = "http://172.20.17.59:8000";
     private static Retrofit retrofit = null;
 
     public static ApiService getApiService() {
@@ -19,12 +19,11 @@ public class RetrofitClient {
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            // Add CookieManager to handle session cookies
             CookieManager cookieManager = new CookieManager();
             cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                    .cookieJar(new JavaNetCookieJar(cookieManager)) // Handles cookies for session management
+                    .cookieJar(new JavaNetCookieJar(cookieManager))
                     .addInterceptor(loggingInterceptor)
                     .build();
 

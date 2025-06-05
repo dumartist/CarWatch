@@ -31,14 +31,12 @@ import retrofit2.Response;
 
 public class HistoryViewModel extends AndroidViewModel {
 
-    // UiHistoryItem is used for displaying history in the UI.
-    // It can be derived from model.HistoryData.
     public static class UiHistoryItem {
-        private String title;       // Corresponds to HistoryData.subject
-        private String timestamp;   // Formatted HistoryData.date (full date and time)
-        private String details;     // Corresponds to HistoryData.description
-        private String dateOnly;    // Formatted HistoryData.date (date part only for filtering)
-        private String plate;       // Corresponds to HistoryData.plate
+        private String title;
+        private String timestamp;
+        private String details;
+        private String dateOnly;
+        private String plate;
 
         public UiHistoryItem(String title, String timestamp, String details, String dateOnly, String plate) {
             this.title = title;
@@ -56,9 +54,9 @@ public class HistoryViewModel extends AndroidViewModel {
     }
 
     private final MutableLiveData<List<UiHistoryItem>> historyUiItems = new MutableLiveData<>();
-    private List<HistoryData> allFetchedHistoryData = new ArrayList<>(); // Stores all data from a successful fetch
+    private List<HistoryData> allFetchedHistoryData = new ArrayList<>();
     private final ApiService apiService;
-    private final SharedPreferences sharedPreferences; // Kept for userId
+    private final SharedPreferences sharedPreferences;
     private final String userId;
 
     public HistoryViewModel(@NonNull Application application) {
@@ -123,52 +121,46 @@ public class HistoryViewModel extends AndroidViewModel {
         return uiItems;
     }
 
-    // rawDate is expected in "EEE, dd MMM yyyy HH:mm:ss zzz" format, assumed to be UTC/GMT
     private String formatRawDateToTimestamp(String rawDate) {
         try {
-            // Input format from backend
             SimpleDateFormat inputFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
-            inputFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Assume input is UTC
-
-            // Desired output format for display
-            SimpleDateFormat outputFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm a", Locale.US);
-            outputFormat.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
-            ; // Format for device's local timezone
-
             Date date = inputFormat.parse(rawDate);
-            return outputFormat.format(date);
+            
+            long correctedTime = date.getTime() - (7 * 60 * 60 * 1000);
+            Date correctedDate = new Date(correctedTime);
+            
+            SimpleDateFormat outputFormat = new SimpleDateFormat("EEEE, dd MM yyyy HH:mm:ss", Locale.US);
+            outputFormat.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
+            
+            return outputFormat.format(correctedDate);
         } catch (ParseException e) {
             Log.e("HistoryViewModel", "Timestamp Parsing Error for date '" + rawDate + "': " + e.getMessage());
-            return rawDate; // Return raw if parsing fails
+            return rawDate;
         }
     }
 
-    // rawDate is expected in "EEE, dd MMM yyyy HH:mm:ss zzz" format, assumed to be UTC/GMT
     private String formatRawDateToDateOnly(String rawDate) {
         try {
-            // Input format from backend
             SimpleDateFormat inputFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
-            inputFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // Assume input is UTC
-
-            // Desired output format for filtering
-            SimpleDateFormat outputFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-            outputFormat.setTimeZone(TimeZone.getDefault()); // Format for device's local timezone (important for date boundary)
-
             Date date = inputFormat.parse(rawDate);
-            return outputFormat.format(date);
+            
+            long correctedTime = date.getTime() - (7 * 60 * 60 * 1000);
+            Date correctedDate = new Date(correctedTime);
+            
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+            outputFormat.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
+            
+            return outputFormat.format(correctedDate);
         } catch (ParseException e) {
             Log.e("HistoryViewModel", "DateOnly Parsing Error for date '" + rawDate + "': " + e.getMessage());
-            // Fallback for unexpected yyyy-MM-dd format
-            if (rawDate != null && rawDate.contains("-")) { // Basic check for yyyy-MM-dd structure
+            if (rawDate != null && rawDate.contains("-")) {
                 try {
-                    // This fallback assumes the yyyy-MM-dd string is a UTC date.
-                    // For correct date boundary, it should also be parsed as UTC then formatted to local.
-                    String datePart = rawDate.substring(0, 10); // Assuming yyyy-MM-dd
+                    String datePart = rawDate.substring(0, 10);
                     SimpleDateFormat inputFormatSimple = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-                    inputFormatSimple.setTimeZone(TimeZone.getTimeZone("UTC")); // Treat as UTC date
+                    inputFormatSimple.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
 
                     SimpleDateFormat outputFormatSimple = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-                    outputFormatSimple.setTimeZone(TimeZone.getDefault()); // Convert to local date
+                    outputFormatSimple.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta")); 
 
                     Date simpleDate = inputFormatSimple.parse(datePart);
                     return outputFormatSimple.format(simpleDate);
@@ -180,10 +172,8 @@ public class HistoryViewModel extends AndroidViewModel {
         }
     }
 
-    // selectedDate is in MM/dd/yyyy format
     public void filterHistoryByDate(String selectedDate) {
         if (allFetchedHistoryData.isEmpty()) {
-            // If no data has been fetched yet, fetch it first, then filter.
             apiService.getHistory().enqueue(new Callback<HistoryResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<HistoryResponse> call, @NonNull Response<HistoryResponse> response) {
@@ -202,12 +192,10 @@ public class HistoryViewModel extends AndroidViewModel {
                 }
             });
         } else {
-            // Data already fetched, just apply filter
             applyFilter(selectedDate);
         }
     }
 
-    // selectedDate is in MM/dd/yyyy format
     private void applyFilter(String selectedDate) {
         List<UiHistoryItem> filteredUiItems = allFetchedHistoryData.stream()
                 .map(data -> {
@@ -221,8 +209,6 @@ public class HistoryViewModel extends AndroidViewModel {
     }
 
     public void clearDisplayedHistory() {
-        // Clears the LiveData, effectively clearing the UI list.
-        // Does not delete from the server or the 'allFetchedHistoryData' cache.
         historyUiItems.setValue(new ArrayList<>());
     }
 }
