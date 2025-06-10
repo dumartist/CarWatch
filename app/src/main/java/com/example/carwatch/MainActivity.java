@@ -65,7 +65,13 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
 
         isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false);
 
-        navigateToLoginFragment();
+        if (isLoggedIn) {
+            binding.bottomNavigationView.setVisibility(View.VISIBLE);
+            replaceFragment(new HomeFragment());
+        } else {
+            navigateToLoginFragment();
+        }
+
 
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;

@@ -14,24 +14,25 @@ import retrofit2.http.POST;
 
 public interface ApiService {
 
-    @POST("user/update/username")
+    @POST("auth/user/update/username")
     Call<ServerResponse> updateUser(@Body Map<String, String> body);
 
-    @POST("user/update/password")
+    @POST("auth/user/update/password")
     Call<ServerResponse> updatePassword(@Body Map<String, String> body);
 
-    @POST("user/delete")
+    @POST("auth/user/delete")
     Call<ServerResponse> deleteUser(@Body Map<String, String> body);
 
-    @POST("login")
+    @POST("auth/login")
     Call<LoginResponse> login(@Body Map<String, String> body);
 
-    @POST("register")
+    @POST("auth/register")
     Call<RegisterResponse> register(@Body Map<String, String> body);
 
-    @POST("logout")
+    @POST("auth/logout")
     Call<ServerResponse> logout();
-    
+
     @GET("history/get")
     Call<HistoryResponse> getHistory();
 }
+

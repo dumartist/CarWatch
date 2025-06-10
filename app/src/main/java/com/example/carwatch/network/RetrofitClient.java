@@ -11,7 +11,7 @@ import okhttp3.JavaNetCookieJar;
 
 public class RetrofitClient {
 
-    private static final String BASE_URL = "http://172.20.17.59:8000";
+    private static final String BASE_URL = "http://192.168.18.9:8000";
     private static Retrofit retrofit = null;
 
     public static ApiService getApiService() {
