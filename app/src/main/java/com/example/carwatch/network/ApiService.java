@@ -14,13 +14,13 @@ import retrofit2.http.POST;
 
 public interface ApiService {
 
-    @POST("auth/user/update/username")
+    @POST("auth/update/username")
     Call<ServerResponse> updateUser(@Body Map<String, String> body);
 
-    @POST("auth/user/update/password")
+    @POST("auth/update/password")
     Call<ServerResponse> updatePassword(@Body Map<String, String> body);
 
-    @POST("auth/user/delete")
+    @POST("auth/delete")
     Call<ServerResponse> deleteUser(@Body Map<String, String> body);
 
     @POST("auth/login")
@@ -32,7 +32,7 @@ public interface ApiService {
     @POST("auth/logout")
     Call<ServerResponse> logout();
 
-    @GET("history/get")
+    @GET("api/history")
     Call<HistoryResponse> getHistory();
 }
 

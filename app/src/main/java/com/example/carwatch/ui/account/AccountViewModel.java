@@ -43,7 +43,7 @@ public class AccountViewModel extends AndroidViewModel {
         super(application);
         sharedPreferences = application.getSharedPreferences("my_app", Context.MODE_PRIVATE);
         userId = sharedPreferences.getString("userId", null);
-        apiService = RetrofitClient.getApiService();
+        apiService = RetrofitClient.getApiService(application.getApplicationContext());
     }
 
     public LiveData<OperationStatus> getOperationStatus() {

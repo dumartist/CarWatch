@@ -61,7 +61,7 @@ public class HistoryViewModel extends AndroidViewModel {
 
     public HistoryViewModel(@NonNull Application application) {
         super(application);
-        apiService = RetrofitClient.getApiService();
+        apiService = RetrofitClient.getApiService(application.getApplicationContext());
         sharedPreferences = application.getSharedPreferences("my_app", Context.MODE_PRIVATE);
         userId = sharedPreferences.getString("userId", null);
 

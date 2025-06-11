@@ -30,7 +30,7 @@ public class LoginViewModel extends AndroidViewModel {
 
     public LoginViewModel(@NonNull Application application) {
         super(application);
-        apiService = RetrofitClient.getApiService();
+        apiService = RetrofitClient.getApiService(application.getApplicationContext());
     }
 
     public LiveData<LoginResult> getLoginResult() {
