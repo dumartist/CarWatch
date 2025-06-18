@@ -32,11 +32,11 @@ import retrofit2.Response;
 public class HistoryViewModel extends AndroidViewModel {
 
     public static class UiHistoryItem {
-        private String title;
-        private String timestamp;
-        private String details;
-        private String dateOnly;
-        private String plate;
+        private final String title;
+        private final String timestamp;
+        private final String details;
+        private final String dateOnly;
+        private final String plate;
 
         public UiHistoryItem(String title, String timestamp, String details, String dateOnly, String plate) {
             this.title = title;
@@ -56,13 +56,12 @@ public class HistoryViewModel extends AndroidViewModel {
     private final MutableLiveData<List<UiHistoryItem>> historyUiItems = new MutableLiveData<>();
     private List<HistoryData> allFetchedHistoryData = new ArrayList<>();
     private final ApiService apiService;
-    private final SharedPreferences sharedPreferences;
     private final String userId;
 
     public HistoryViewModel(@NonNull Application application) {
         super(application);
         apiService = RetrofitClient.getApiService(application.getApplicationContext());
-        sharedPreferences = application.getSharedPreferences("my_app", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = application.getSharedPreferences("my_app", Context.MODE_PRIVATE);
         userId = sharedPreferences.getString("userId", null);
 
         if (userId == null) {

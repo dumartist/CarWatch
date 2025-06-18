@@ -24,7 +24,6 @@ public class LoginFragment extends Fragment {
     private ViewSwitcher viewSwitcher;
     private EditText etLoginUsername, etLoginPassword;
     private EditText etSignUpUsername, etSignUpPassword, etConfirmPassword;
-    private Button btnSignIn, btnCreateAccount;
 
     private LoginViewModel loginViewModel;
 
@@ -49,12 +48,12 @@ public class LoginFragment extends Fragment {
 
         etLoginUsername = binding.etLoginUsername;
         etLoginPassword = binding.etLoginPassword;
-        btnSignIn = binding.btnSignIn;
+        Button btnSignIn = binding.btnSignIn;
 
         etSignUpUsername = binding.etSignUpUsername;
         etSignUpPassword = binding.etSignUpPassword;
         etConfirmPassword = binding.etConfirmPassword;
-        btnCreateAccount = binding.btnCreateAccount;
+        Button btnCreateAccount = binding.btnCreateAccount;
 
         tvCreateAccount.setOnClickListener(v -> viewSwitcher.showNext());
 
@@ -135,7 +134,7 @@ public class LoginFragment extends Fragment {
         if (context instanceof OnLoginSuccessListener) {
             loginSuccessListener = (OnLoginSuccessListener) context;
         } else {
-            throw new ClassCastException(context.toString()
+            throw new ClassCastException(context
                     + " must implement LoginFragment.OnLoginSuccessListener");
         }
     }

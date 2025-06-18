@@ -31,9 +31,9 @@ public class AccountViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> logoutSuccess = new MutableLiveData<>(false);
 
 
-    private SharedPreferences sharedPreferences;
-    private String userId;
-    private ApiService apiService;
+    private final SharedPreferences sharedPreferences;
+    private final String userId;
+    private final ApiService apiService;
 
     public enum OperationStatus {
         IDLE, LOADING, SUCCESS, ERROR

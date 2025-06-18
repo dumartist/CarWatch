@@ -42,12 +42,12 @@ public class AccountFragment extends Fragment {
         if (context instanceof AccountDeletionNavigator) {
             accountDeletionNavigator = (AccountDeletionNavigator) context;
         } else {
-            throw new RuntimeException(context.toString() + " must implement AccountDeletionNavigator");
+            throw new RuntimeException(context + " must implement AccountDeletionNavigator");
         }
         if (context instanceof LogoutNavigator) {
             logoutNavigator = (LogoutNavigator) context;
         } else {
-            throw new RuntimeException(context.toString() + " must implement LogoutNavigator");
+            throw new RuntimeException(context + " must implement LogoutNavigator");
         }
     }
 

@@ -23,7 +23,6 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -40,9 +39,7 @@ public class HistoryFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Context themedContext = new ContextThemeWrapper(requireContext(), R.style.AppTheme);
-        LayoutInflater themedInflater = inflater.cloneInContext(themedContext);
-        return themedInflater.inflate(R.layout.fragment_history, container, false);
+        return inflater.inflate(R.layout.fragment_history, container, false);
     }
 
     @Override
@@ -69,11 +66,11 @@ public class HistoryFragment extends Fragment {
 
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(HistoryViewModel.class);
-        viewModel.getHistoryUiItems().observe(getViewLifecycleOwner(), this::updateUI);
+        viewModel.getHistoryUiItems().observe(getViewLifecycleOwner(), uiHistoryItems -> updateUI(uiHistoryItems));
     }
 
     private void setupRecyclerView() {
-        adapter = new HistoryAdapter(new ArrayList<>());
+        adapter = new HistoryAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
     }

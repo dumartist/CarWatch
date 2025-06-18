@@ -15,6 +15,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/** @noinspection CanBeFinal*/
 public class WeatherViewModel extends ViewModel {
     private static final String API_KEY = "8a5e4a7705ac1a2528fcaedea2e95b26";
 

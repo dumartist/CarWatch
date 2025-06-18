@@ -24,8 +24,8 @@ public interface ApiService {
     Call<ServerResponse> deleteUser(@Body Map<String, String> body);
 
     @POST("auth/login")
-    Call<LoginResponse> login(@Body Map<String, String> body);
-
+    Call<LoginResponse> login(@Body Map<String, String> body);    
+    
     @POST("auth/register")
     Call<RegisterResponse> register(@Body Map<String, String> body);
 
@@ -34,5 +34,6 @@ public interface ApiService {
 
     @GET("api/history")
     Call<HistoryResponse> getHistory();
+
 }
 

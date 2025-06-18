@@ -8,8 +8,8 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/profile_image"
-        android:layout_width="320px"
-        android:layout_height="320px"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:layout_marginTop="50dp"
         android:background="@drawable/user_svgrepo_com"
         android:padding="3dp"
@@ -54,10 +54,8 @@
         android:layout_marginStart="10dp"
         android:layout_marginTop="30dp"
         android:layout_marginEnd="10dp"
-        android:layout_marginBottom="20dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="4dp"
-        app:layout_constraintBottom_toTopOf="@+id/garage_lamp_card"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/welcome_message">
@@ -78,19 +76,19 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:text="Car Status"
                     android:textColor="@color/black"
                     android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:text="Car Status" />
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/home_car_number"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="BM 1234 PP"
                     android:textColor="@color/black"
                     android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:text="BM 1234 PP" />
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <TextView
@@ -111,49 +109,43 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Garage Lamp Section -->
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/garage_lamp_card"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginBottom="242dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <ImageView
+        android:id="@+id/car_image"
+        android:layout_width="320dp"
+        android:layout_height="300dp"
+        android:layout_marginTop="40dp"
+        android:visibility="visible"
+        android:contentDescription="@string/loading"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/car_detection_card">
+    </ImageView>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="96dp"
-            android:orientation="vertical"
-            android:padding="12dp">
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="162dp"
+        android:layout_height="155dp"
+        android:layout_marginTop="35dp"
+        android:indeterminateTint="@color/black"
+        android:indeterminateTintMode="src_in"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.514"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/car_detection_card" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="@string/garage_lamp"
-                android:textColor="@color/light_on_surface"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/lamp_toggle_switch"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="@string/lamp_toggle"
-                app:trackTint="@color/light_primary_variant" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <androidx.constraintlayout.widget.Barrier
-        android:id="@+id/barrier2"
+    <TextView
+        android:id="@+id/loading_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:barrierDirection="left"
-        app:constraint_referenced_ids="garage_lamp_card" />
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="104dp"
+        android:text="Image is still processing..."
+        android:textColor="@color/light_on_surface"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/progressBar"
+        app:layout_constraintHorizontal_bias="0.652"
+        app:layout_constraintStart_toStartOf="@+id/progressBar"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar"
+        app:layout_constraintVertical_bias="1.0" />
 </androidx.constraintlayout.widget.ConstraintLayout>

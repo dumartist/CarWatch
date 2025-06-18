@@ -15,9 +15,10 @@ navigationUi = "2.9.0"
 legacySupportV4 = "1.0.0"
 okhttp = "4.12.0"
 okhttpUrlconnection = "4.12.0"
+persistentcookiejar = "v1.0.1"
 recyclerview = "1.4.0"
 circleimageview = "3.1.0"
-retrofit = "3.0.0"
+retrofit = "2.9.0"
 
 [libraries]
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
@@ -35,6 +36,7 @@ navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version
 legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
 okhttp3-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp3-okhttp-urlconnection = { module = "com.squareup.okhttp3:okhttp-urlconnection", version.ref = "okhttpUrlconnection" }
+persistentcookiejar = { module = "com.github.franmontiel:PersistentCookieJar", version.ref = "persistentcookiejar" }
 recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 circleimageview = { group = "de.hdodenhof", name = "circleimageview", version.ref = "circleimageview" }
 retrofit2-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }

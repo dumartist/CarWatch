@@ -2,6 +2,7 @@ package com.example.carwatch;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
 
         binding.bottomNavigationView.setVisibility(View.VISIBLE);
         replaceFragment(new HomeFragment());
+        binding.bottomNavigationView.setSelectedItemId(R.id.home);
     }
 
     @Override
@@ -68,10 +70,10 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
         if (isLoggedIn) {
             binding.bottomNavigationView.setVisibility(View.VISIBLE);
             replaceFragment(new HomeFragment());
+            binding.bottomNavigationView.setSelectedItemId(R.id.home);
         } else {
             navigateToLoginFragment();
         }
-
 
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
@@ -101,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
         });
     }
 
+
     private void replaceFragment(Fragment fragment) {
         if (fragment == null) return;
 
@@ -122,14 +125,32 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnL
     }
 
     @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Handle configuration changes to prevent fragment recreation
+    }
+
+    @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean("isLoggedIn", isLoggedIn);
+        
+        // Save current fragment state
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.frame_layout);
+        if (currentFragment != null) {
+            getSupportFragmentManager().putFragment(outState, "currentFragment", currentFragment);
+        }
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         isLoggedIn = savedInstanceState.getBoolean("isLoggedIn", false);
+        
+        // Restore fragment if available
+        Fragment savedFragment = getSupportFragmentManager().getFragment(savedInstanceState, "currentFragment");
+        if (savedFragment != null) {
+            replaceFragment(savedFragment);
+        }
     }
 }

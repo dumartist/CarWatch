@@ -9,20 +9,15 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+/** @noinspection CanBeFinal*/
 public class HomeViewModel extends AndroidViewModel {
-    private final MutableLiveData<String> _lastDetectionTime = new MutableLiveData<>();
-    public LiveData<String> lastDetectionTime = _lastDetectionTime;
-
-    private final MutableLiveData<String> _licensePlate = new MutableLiveData<>();
-    public LiveData<String> licensePlate = _licensePlate;
-
-    private final MutableLiveData<Boolean> _isGarageLampOn = new MutableLiveData<>(false);
-    public LiveData<Boolean> isGarageLampOn = _isGarageLampOn;
-
     private final MutableLiveData<String> _username = new MutableLiveData<>();
     public LiveData<String> username = _username;
 
-    private SharedPreferences sharedPreferences;
+    private final MutableLiveData<String> _imagePath = new MutableLiveData<>();
+    public LiveData<String> imagePath = _imagePath;
+
+    private final SharedPreferences sharedPreferences;
 
     public HomeViewModel(@NonNull Application application) {
         super(application);
@@ -35,13 +30,7 @@ public class HomeViewModel extends AndroidViewModel {
         _username.setValue(currentUsername);
     }
 
-    public void updateDetection(String time, String plate) {
-        _lastDetectionTime.setValue(time);
-        _licensePlate.setValue(plate);
-    }
-
-    public void toggleGarageLamp() {
-        Boolean currentState = _isGarageLampOn.getValue();
-        _isGarageLampOn.setValue(currentState == null ? true : !currentState);
+    public void setImagePath(String path) {
+        _imagePath.setValue(path);
     }
 }
