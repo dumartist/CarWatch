@@ -167,7 +167,6 @@ public class AccountViewModel extends AndroidViewModel {
         body.put("new_password", newPassword);
         body.put("confirm_new_password", newPassword); // Flask expects confirm_new_password
 
-        // userId is no longer sent as Flask uses session
         apiService.updatePassword(body).enqueue(new Callback<ServerResponse>() {
             @Override
             public void onResponse(@NonNull Call<ServerResponse> call, @NonNull Response<ServerResponse> response) {
@@ -222,7 +221,6 @@ public class AccountViewModel extends AndroidViewModel {
         Map<String, String> body = new HashMap<>();
         body.put("password", currentPassword);
 
-        // userId is no longer sent; Flask uses session. Pass currentPassword for verification.
         apiService.deleteUser(body).enqueue(new Callback<ServerResponse>() {
             @Override
             public void onResponse(@NonNull Call<ServerResponse> call, @NonNull Response<ServerResponse> response) {

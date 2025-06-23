@@ -40,8 +40,10 @@
 
     <!-- Input Styles -->
     <style name="AppTheme.Input" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="boxStrokeColor">@color/light_primary_variant</item>
+        <item name="boxStrokeColor">@color/black</item>
         <item name="hintTextColor">@color/light_secondary</item>
+        <item name="colorOnSurface">@color/light_secondary</item>
+        <item name="android:textColorHint">@color/gray</item>
     </style>
 
     <style name="roundedImageViewRounded">

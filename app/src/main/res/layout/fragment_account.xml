@@ -74,7 +74,10 @@
                         android:textStyle="bold" />
 
                     <com.google.android.material.textfield.TextInputLayout
-                        style="@style/AppTheme.Input"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="@color/black"
+                        android:textColorHint="@color/gray"
+                        app:hintTextColor="@color/light_secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp">
@@ -85,7 +88,7 @@
                             android:layout_height="wrap_content"
                             android:hint="Enter new name"
                             android:inputType="text"
-                            android:textColor="@color/light_on_surface" />
+                            android:textColor="@color/light_on_surface"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -120,7 +123,10 @@
                         android:textStyle="bold" />
 
                     <com.google.android.material.textfield.TextInputLayout
-                        style="@style/AppTheme.Input"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="@color/black"
+                        android:textColorHint="@color/gray"
+                        app:hintTextColor="@color/light_secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp">
@@ -135,7 +141,10 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
-                        style="@style/AppTheme.Input"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="@color/black"
+                        android:textColorHint="@color/gray"
+                        app:hintTextColor="@color/light_secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp">
@@ -150,7 +159,10 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
-                        style="@style/AppTheme.Input"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="@color/black"
+                        android:textColorHint="@color/gray"
+                        app:hintTextColor="@color/light_secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp">
@@ -160,8 +172,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Confirm New Password"
-                            android:inputType="textPassword"
-                            android:textColor="@color/light_on_surface" />
+                            android:textColor="@color/black"
+                            android:inputType="textPassword" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton

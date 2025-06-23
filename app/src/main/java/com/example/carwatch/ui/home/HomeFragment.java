@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -184,7 +185,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void startLoadingTextAnimation() {
-        loadingTextHandler = new Handler();
+        loadingTextHandler = new Handler(Looper.getMainLooper());
         loadingTextRunnable = new Runnable() {
             @Override
             public void run() {

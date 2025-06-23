@@ -13,9 +13,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public class RetrofitClient {    // Use 10.0.2.2 for Android emulator to access host machine
-    // Use 192.168.1.5 for physical device on same network
-    private static final String BASE_URL = "http://10.0.2.2:8000";
+public class RetrofitClient {
+    private static final String BASE_URL = "https://carwatch.xetf.my.id";
 
     private static PersistentCookieJar cookieJar = null;
 
@@ -25,7 +24,7 @@ public class RetrofitClient {    // Use 10.0.2.2 for Android emulator to access 
                     new SetCookieCache(),
                     new SharedPrefsCookiePersistor(context.getApplicationContext())
             );
-        }        // Selalu buat ulang Retrofit agar selalu pakai cookie terbaru
+        }
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 

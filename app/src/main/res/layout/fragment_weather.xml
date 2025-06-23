@@ -1,167 +1,182 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_primary"
+    android:fillViewport="true"
     tools:context="com.example.carwatch.ui.weather.WeatherFragment">
 
-    <TextView
-        android:id="@+id/cityNameText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:text="@string/title_weather"
-        android:textSize="36sp"
-        android:textColor="@color/text_color"/>
-
-    <TextView
-        android:id="@+id/temperatureText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:text="25°"
-        android:textColor="@color/text_color"
-        android:textSize="60sp"
-        android:textStyle="bold"
-        android:layout_below="@id/cityNameText"/>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/detailsCard"
-        style="@style/AppTheme.Card"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/temperatureText"
-        android:layout_margin="16dp">
+        android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:baselineAligned="false"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/cityNameText"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:padding="16dp">
-
-            <LinearLayout
-                android:id="@+id/humidityLayout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <ImageView
-                    android:id="@+id/humidityIcon"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/droplet_svgrepo_com"
-                    android:contentDescription="@string/humidity"/>
-
-                <TextView
-                    android:id="@+id/humidityText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="60%"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_color"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Humidity"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_color"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/windLayout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <ImageView
-                    android:id="@+id/windIcon"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/wind_svgrepo_com"
-                    android:contentDescription="@string/wind"/>
-
-                <TextView
-                    android:id="@+id/windText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="10 km/h"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_color"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Wind"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_color"/>
-            </LinearLayout>
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <ImageView
-        android:id="@+id/weatherIcon"
-        android:layout_width="160dp"
-        android:layout_height="160dp"
-        android:layout_below="@id/detailsCard"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:contentDescription="@string/weather_icon"
-        android:elevation="8dp"
-        android:src="@drawable/ic_01d" />
-
-    <TextView
-        android:id="@+id/descriptionText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/weatherIcon"
-        android:layout_centerHorizontal="true"
-        android:text="Sunny"
-        android:textColor="@color/text_color"
-        android:textSize="28sp"/>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/cityInputLayout"
-        style="@style/AppTheme.Input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/descriptionText"
-        android:layout_margin="16dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/cityNameInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:hint="@string/enter_city_name"
-            android:inputType="text"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:text="@string/title_weather"
             android:textColor="@color/text_color"
+            android:textSize="36sp" />
+
+        <TextView
+            android:id="@+id/temperatureText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:text="25°"
+            android:textColor="@color/text_color"
+            android:textSize="60sp"
+            android:textStyle="bold"
+            android:layout_below="@id/cityNameText"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/detailsCard"
+            style="@style/AppTheme.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/temperatureText"
+            android:layout_margin="16dp">
+
+            <LinearLayout
+                android:baselineAligned="false"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:id="@+id/humidityLayout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/humidityIcon"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/droplet_svgrepo_com"
+                        android:contentDescription="@string/humidity"/>
+
+                    <TextView
+                        android:id="@+id/humidityText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="60%"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_color"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Humidity"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_color"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/windLayout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/windIcon"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/wind_svgrepo_com"
+                        android:contentDescription="@string/wind"/>
+
+                    <TextView
+                        android:id="@+id/windText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10 km/h"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_color"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wind"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_color"/>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <ImageView
+            android:id="@+id/weatherIcon"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_below="@id/detailsCard"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/weather_icon"
+            android:elevation="8dp"
+            android:src="@drawable/ic_01d" />
+
+        <TextView
+            android:id="@+id/descriptionText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/weatherIcon"
+            android:layout_centerHorizontal="true"
+            android:text="Sunny"
+            android:textColor="@color/text_color"
+            android:textSize="28sp"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:id="@+id/cityInputLayout"
+            app:boxStrokeColor="@color/black"
             android:textColorHint="@color/gray"
-            android:textSize="24sp" />
-    </com.google.android.material.textfield.TextInputLayout>
+            app:hintTextColor="@color/black"
+            app:boxBackgroundColor="@color/white"
+            app:boxCornerRadiusTopStart="4dp"
+            app:boxCornerRadiusTopEnd="4dp"
+            app:boxCornerRadiusBottomStart="4dp"
+            app:boxCornerRadiusBottomEnd="4dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/descriptionText"
+            android:layout_margin="15dp">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/fetchWeatherButton"
-        style="@style/AppTheme.Button"
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_below="@+id/cityInputLayout"
-        android:layout_marginHorizontal="16dp"
-        android:text="Change City"
-        android:gravity="center"
-        android:textSize="20sp"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/cityNameInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:hint="@string/enter_city_name"
+                android:inputType="text"
+                android:textColor="@color/text_color"
+                android:textSize="24sp"
+                android:padding="20dp"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
-</RelativeLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/fetchWeatherButton"
+            style="@style/AppTheme.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/cityInputLayout"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="20dp"
+            android:gravity="center"
+            android:padding="20dp"
+            android:text="Change City"
+            android:textSize="20sp" />
+    </RelativeLayout>
+</androidx.core.widget.NestedScrollView>

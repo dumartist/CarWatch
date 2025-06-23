@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import java.io.File;
@@ -23,7 +22,7 @@ public class ImageService {
     private static final String CACHE_DIR = "cache";
     private static final long CACHE_EXPIRY_TIME = 24 * 60 * 60 * 1000;
     private static final ExecutorService executor = Executors.newFixedThreadPool(2);
-    private static final String BASE_URL = "http://10.0.2.2:8000";
+    private static final String BASE_URL = "https://carwatch.xetf.my.id";
     
     public interface ImageFetchListener {
         void onImageFetched(String imagePath);

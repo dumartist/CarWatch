@@ -42,17 +42,22 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
                 app:endIconMode="custom"
-                app:endIconDrawable="@drawable/calendar_alt_svgrepo_com">
+                android:hint="Select Date"
+                app:boxStrokeColor="@color/black"
+                android:textColorHint="@color/black"
+                app:endIconTint="@color/black"
+                app:endIconDrawable="@drawable/calendar_alt_svgrepo_com"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_date"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Select Date"
                     android:inputType="date"
                     android:focusable="false"
                     android:text="03/18/2025"
-                    android:textColor="@color/black"/>
+                    android:textColor="@color/black"
+                    android:backgroundTint="@color/light_background"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton
