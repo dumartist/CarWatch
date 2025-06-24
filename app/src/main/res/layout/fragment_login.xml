@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    android:background="@color/light_background"
     android:padding="16dp">
 
     <ViewSwitcher
@@ -14,117 +14,167 @@
         android:layout_height="wrap_content"
         tools:ignore="UselessParent">
 
-        <!-- Login Layout -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
+            style="@style/AppTheme.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@android:drawable/dialog_holo_light_frame">
+            android:layout_marginBottom="16dp">
 
-            <TextView
-                android:text="Username"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <EditText
-                android:id="@+id/etLoginUsername"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:paddingVertical="10dp"
-                android:hint="@string/username"
-                android:inputType="text"/>
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="#F4F4F4">
 
-            <TextView
-                android:text="Password"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="@string/username"
+                    android:textColorHint="@color/gray"
+                    app:boxStrokeColor="@color/black"
+                    app:hintTextColor="@color/light_secondary">
 
-            <EditText
-                android:id="@+id/etLoginPassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:paddingVertical="10dp"
-                android:hint="@string/password"
-                android:inputType="textPassword"/>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etLoginUsername"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:textColor="@color/black" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/btnSignIn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sign In"/>
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="@string/password"
+                    android:textColorHint="@color/gray"
+                    app:boxStrokeColor="@color/black"
+                    app:hintTextColor="@color/light_secondary">
 
-            <TextView
-                android:id="@+id/tvCreateAccount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/create_account"
-                android:textColor="@android:color/holo_blue_dark"
-                android:clickable="true"
-                android:padding="10dp"
-                android:minHeight="48dp"/>
-        </LinearLayout>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etLoginPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"
+                        android:textColor="@color/black" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Sign Up Layout -->
-        <LinearLayout
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSignIn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="16dp"
+                    android:text="Sign In"
+                    android:backgroundTint="@color/light_primary_variant"
+                    android:textColor="@color/white"/>
+
+                <TextView
+                    android:id="@+id/tvCreateAccount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:minHeight="48dp"
+                    android:padding="10dp"
+                    android:text="@string/create_account"
+                    android:textColor="@android:color/holo_blue_dark" />
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/AppTheme.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@android:drawable/dialog_holo_light_frame">
+            android:layout_marginBottom="16dp">
 
-            <TextView
-                android:text="Username"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <EditText
-                android:id="@+id/etSignUpUsername"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Username..." />
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="#F4F4F4">
 
-            <TextView
-                android:text="Password"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="Username"
+                    android:textColorHint="@color/gray"
+                    app:boxStrokeColor="@color/black"
+                    app:hintTextColor="@color/light_secondary">
 
-            <EditText
-                android:id="@+id/etSignUpPassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Password..."
-                android:inputType="textPassword"/>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etSignUpUsername"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView
-                android:text="Confirm Password"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="Password"
+                    android:textColorHint="@color/gray"
+                    app:boxStrokeColor="@color/black"
+                    app:hintTextColor="@color/light_secondary">
 
-            <EditText
-                android:id="@+id/etConfirmPassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Confirm Password"
-                android:inputType="textPassword"/>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etSignUpPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/btnCreateAccount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Create Account"/>
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:hint="Confirm Password"
+                    android:textColorHint="@color/gray"
+                    app:boxStrokeColor="@color/black"
+                    app:hintTextColor="@color/light_secondary">
 
-            <TextView
-                android:id="@+id/tvSignIn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/sign_in"
-                android:textColor="@android:color/holo_blue_dark"
-                android:clickable="true"/>
-        </LinearLayout>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etConfirmPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword" />
+                </com.google.android.material.textfield.TextInputLayout>
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCreateAccount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="16dp"
+                    android:text="Create Account"
+                    android:backgroundTint="@color/light_primary_variant"
+                    android:textColor="@color/white"/>
+
+                <TextView
+                    android:id="@+id/tvSignIn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:minHeight="48dp"
+                    android:padding="10dp"
+                    android:text="@string/sign_in"
+                    android:textColor="@android:color/holo_blue_dark" />
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
     </ViewSwitcher>
-
 </LinearLayout>
