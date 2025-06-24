@@ -9,8 +9,12 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-/** @noinspection CanBeFinal*/
+import com.example.carwatch.ui.history.HistoryViewModel;
+
+import java.util.List;
+
 public class HomeViewModel extends AndroidViewModel {
+
     private final MutableLiveData<String> _username = new MutableLiveData<>();
     public LiveData<String> username = _username;
 
@@ -18,6 +22,11 @@ public class HomeViewModel extends AndroidViewModel {
     public LiveData<String> imagePath = _imagePath;
 
     private final SharedPreferences sharedPreferences;
+
+    private boolean isImageFetched = false;
+    private boolean isHistoryFetched = false;
+
+    private List<HistoryViewModel.UiHistoryItem> lastHistoryItems;
 
     public HomeViewModel(@NonNull Application application) {
         super(application);
@@ -32,5 +41,29 @@ public class HomeViewModel extends AndroidViewModel {
 
     public void setImagePath(String path) {
         _imagePath.setValue(path);
+    }
+
+    public boolean isImageFetched() {
+        return isImageFetched;
+    }
+
+    public void setImageFetched(boolean imageFetched) {
+        isImageFetched = imageFetched;
+    }
+
+    public boolean isHistoryFetched() {
+        return isHistoryFetched;
+    }
+
+    public void setHistoryFetched(boolean historyFetched) {
+        isHistoryFetched = historyFetched;
+    }
+
+    public List<HistoryViewModel.UiHistoryItem> getLastHistoryItems() {
+        return lastHistoryItems;
+    }
+
+    public void setLastHistoryItems(List<HistoryViewModel.UiHistoryItem> lastHistoryItems) {
+        this.lastHistoryItems = lastHistoryItems;
     }
 }

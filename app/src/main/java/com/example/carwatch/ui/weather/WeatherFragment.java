@@ -71,6 +71,7 @@ public class WeatherFragment extends Fragment {
             String cityName = binding.cityNameInput.getText().toString().trim();
             if (!cityName.isEmpty()) {
                 weatherViewModel.fetchWeatherData(cityName);
+                binding.cityNameInput.setText("");
             } else {
                 binding.cityNameInput.setError("Please enter a city name");
             }

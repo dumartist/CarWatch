@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.carwatch.R;
 import com.example.carwatch.databinding.FragmentHomeBinding;
@@ -28,6 +29,7 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
     private HomeViewModel homeViewModel;
     private HistoryViewModel historyViewModel;
+
     private Handler loadingTextHandler;
     private Runnable loadingTextRunnable;
     private int dotCount = 0;
@@ -45,13 +47,12 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-        historyViewModel = new ViewModelProvider(this).get(HistoryViewModel.class);
+        homeViewModel = new ViewModelProvider(requireActivity()).get(HomeViewModel.class);
+        historyViewModel = new ViewModelProvider(requireActivity()).get(HistoryViewModel.class);
 
         homeViewModel.username.observe(getViewLifecycleOwner(), currentUsername -> {
             if (currentUsername != null && !currentUsername.isEmpty()) {
-                String greeting = "Hello " + currentUsername;
-                binding.greetingText.setText(greeting);
+                binding.greetingText.setText("Hello " + currentUsername);
             } else {
                 binding.greetingText.setText("Hello User");
             }
@@ -65,8 +66,18 @@ public class HomeFragment extends Fragment {
 
         historyViewModel.getHistoryUiItems().observe(getViewLifecycleOwner(), this::updateCarDetectionInfo);
 
-        showLoading(true);
+        if (!homeViewModel.isImageFetched() || !homeViewModel.isHistoryFetched()) {
+            showLoading(true);
+        }
+
         fetchHistoryAndImage();
+
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> {
+            homeViewModel.setImageFetched(false);
+            homeViewModel.setHistoryFetched(false);
+            fetchHistoryAndImage();
+            binding.swipeRefreshLayout.setRefreshing(false);
+        });
     }
 
     @Override
@@ -81,9 +92,11 @@ public class HomeFragment extends Fragment {
 
             binding.homeStatusTitle.setText(latestItem.getTitle());
             binding.homeCarNumber.setText(latestItem.getPlate());
-            String formattedTime = latestItem.getTimestamp();
-            binding.lastDetectionTime.setText(getString(R.string.last_detection, formattedTime));
+            binding.lastDetectionTime.setText(getString(R.string.last_detection, latestItem.getTimestamp()));
             binding.homeDescription.setText(latestItem.getDetails());
+
+            homeViewModel.setLastHistoryItems(uiHistoryItems);
+            homeViewModel.setHistoryFetched(true);
         } else {
             binding.homeStatusTitle.setText("No data available");
             binding.homeCarNumber.setText("N/A");
@@ -93,8 +106,22 @@ public class HomeFragment extends Fragment {
     }
 
     private void fetchHistoryAndImage() {
-        historyViewModel.fetchAllHistoryData();
-          fetchLatestImageFromAPI();
+        if (!homeViewModel.isImageFetched()) {
+            fetchLatestImageFromAPI();
+        } else {
+            String cachedPath = homeViewModel.imagePath.getValue();
+            if (cachedPath != null) {
+                displayImage(cachedPath);
+            }
+            showLoading(false);
+        }
+
+        if (!homeViewModel.isHistoryFetched()) {
+            historyViewModel.fetchAllHistoryData();
+        } else {
+            updateCarDetectionInfo(homeViewModel.getLastHistoryItems());
+            showLoading(false);
+        }
     }
 
     private void fetchLatestImageFromAPI() {
@@ -105,6 +132,7 @@ public class HomeFragment extends Fragment {
                     getActivity().runOnUiThread(() -> {
                         showLoading(false);
                         homeViewModel.setImagePath(imagePath);
+                        homeViewModel.setImageFetched(true);
                         Toast.makeText(getContext(), "Image loaded successfully", Toast.LENGTH_SHORT).show();
                         binding.carImage.setVisibility(View.VISIBLE);
                     });
@@ -116,15 +144,15 @@ public class HomeFragment extends Fragment {
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         showLoading(false);
-                        
                         String errorMessage = "Failed to load image: " + error;
                         if (error.contains("failed to connect")) {
-                            errorMessage += "\n\nPlease ensure:\n1. Flask server is running on port 8000\n2. Server is accessible from emulator";                        }
-                        
+                            errorMessage += "\n\nPlease ensure:\n1. Flask server is running on port 8000\n2. Server is accessible from emulator";
+                        }
                         Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
                         binding.carImage.setVisibility(View.GONE);
                     });
-                }            }
+                }
+            }
         });
     }
 
@@ -133,15 +161,17 @@ public class HomeFragment extends Fragment {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeFile(imagePath, options);
-            
+
             options.inSampleSize = calculateInSampleSize(options, 800, 600);
             options.inJustDecodeBounds = false;
-            
-            Bitmap bitmap = BitmapFactory.decodeFile(imagePath, options);            if (bitmap != null) {
+
+            Bitmap bitmap = BitmapFactory.decodeFile(imagePath, options);
+            if (bitmap != null) {
                 binding.carImage.setImageBitmap(bitmap);
                 binding.carImage.setVisibility(View.VISIBLE);
             } else {
-                binding.carImage.setVisibility(View.GONE);                Toast.makeText(getContext(), "Unable to load image", Toast.LENGTH_SHORT).show();
+                binding.carImage.setVisibility(View.GONE);
+                Toast.makeText(getContext(), "Unable to load image", Toast.LENGTH_SHORT).show();
             }
         } catch (OutOfMemoryError e) {
             Log.e("HomeFragment", "OutOfMemoryError loading image: " + e.getMessage());
@@ -150,7 +180,8 @@ public class HomeFragment extends Fragment {
         } catch (Exception e) {
             Log.e("HomeFragment", "Error loading image: " + e.getMessage());
             Toast.makeText(getContext(), "Error loading image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            binding.carImage.setVisibility(View.GONE);        }
+            binding.carImage.setVisibility(View.GONE);
+        }
     }
 
     private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
@@ -161,7 +192,6 @@ public class HomeFragment extends Fragment {
         if (height > reqHeight || width > reqWidth) {
             final int halfHeight = height / 2;
             final int halfWidth = width / 2;
-
             while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
                 inSampleSize *= 2;
             }
@@ -209,20 +239,19 @@ public class HomeFragment extends Fragment {
         if (loadingTextHandler != null) {
             loadingTextHandler.removeCallbacks(loadingTextRunnable);
         }
-        dotCount = 0;        binding.loadingText.setText("Image is still processing");
+        dotCount = 0;
+        binding.loadingText.setText("Image is still processing");
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         stopLoadingTextAnimation();
-        
+
         if (binding != null && binding.carImage != null && binding.carImage.getDrawable() != null) {
             binding.carImage.setImageDrawable(null);
         }
-        
         binding = null;
-        
         if (loadingTextHandler != null) {
             loadingTextHandler.removeCallbacksAndMessages(null);
             loadingTextHandler = null;
