@@ -43,7 +43,7 @@ public class HistoryViewModel extends AndroidViewModel {
             this.timestamp = timestamp;
             this.details = details;
             this.dateOnly = dateOnly;
-            this.plate = plate;
+            this.plate = (plate != null && !plate.isEmpty()) ? plate : "License not Detected";
         }
 
         public String getTitle() { return title; }
