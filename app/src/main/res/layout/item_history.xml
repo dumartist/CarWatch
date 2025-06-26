@@ -44,17 +44,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:text="10:30 AM"
             android:textColor="@color/gray"
-            android:textSize="12sp"
-            android:text="10:30 AM" />
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/tv_history_details"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:text="Description"
             android:textColor="@color/black"
-            android:textSize="14sp"
-            android:text="Description" />
+            android:textSize="14sp" />
+
+        <ImageView
+            android:id="@+id/history_preview"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="8dp"
+            android:contentDescription="Image Preview"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="true" />
+
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

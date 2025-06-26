@@ -15,6 +15,9 @@ public class HistoryData {
     @SerializedName("date")
     private String date;
 
+    @SerializedName("image_id")
+    private Integer imageId;
+
     // Getters
     public String getSubject() {
         return subject;
@@ -30,5 +33,9 @@ public class HistoryData {
 
     public String getDate() {
         return date;
+    }
+
+    public Integer getImageId() {
+        return imageId;
     }
 }

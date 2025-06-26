@@ -11,6 +11,12 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.bumptech.glide.Glide;
+import com.example.carwatch.model.HistoryData;
+import com.example.carwatch.model.HistoryResponse;
+import com.example.carwatch.network.ApiService;
+import com.example.carwatch.network.RetrofitClient;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,11 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
-
-import com.example.carwatch.model.HistoryData;
-import com.example.carwatch.model.HistoryResponse;
-import com.example.carwatch.network.ApiService;
-import com.example.carwatch.network.RetrofitClient;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,13 +38,15 @@ public class HistoryViewModel extends AndroidViewModel {
         private final String details;
         private final String dateOnly;
         private final String plate;
+        private final Integer imageId; // new
 
-        public UiHistoryItem(String title, String timestamp, String details, String dateOnly, String plate) {
+        public UiHistoryItem(String title, String timestamp, String details, String dateOnly, String plate, Integer imageId) {
             this.title = title;
             this.timestamp = timestamp;
             this.details = details;
             this.dateOnly = dateOnly;
             this.plate = (plate != null && !plate.isEmpty()) ? plate : "License not Detected";
+            this.imageId = imageId;
         }
 
         public String getTitle() { return title; }
@@ -51,6 +54,11 @@ public class HistoryViewModel extends AndroidViewModel {
         public String getDetails() { return details; }
         public String getDateOnly() { return dateOnly; }
         public String getPlate() { return plate; }
+        public Integer getImageId() { return imageId; }
+
+        public String getImageUrl(String baseUrl) {
+            return imageId != null ? baseUrl + "/api/get_image/" + imageId : null;
+        }
     }
 
     private final MutableLiveData<List<UiHistoryItem>> historyUiItems = new MutableLiveData<>();
@@ -115,7 +123,14 @@ public class HistoryViewModel extends AndroidViewModel {
         for (HistoryData data : historyDataList) {
             String formattedTimestamp = formatRawDateToTimestamp(data.getDate());
             String dateOnly = formatRawDateToDateOnly(data.getDate());
-            uiItems.add(new UiHistoryItem(data.getSubject(), formattedTimestamp, data.getDescription(), dateOnly, data.getPlate()));
+            uiItems.add(new UiHistoryItem(
+                    data.getSubject(),
+                    formattedTimestamp,
+                    data.getDescription(),
+                    dateOnly,
+                    data.getPlate(),
+                    data.getImageId() // new
+            ));
         }
         return uiItems;
     }
@@ -124,13 +139,10 @@ public class HistoryViewModel extends AndroidViewModel {
         try {
             SimpleDateFormat inputFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
             Date date = inputFormat.parse(rawDate);
-            
             long correctedTime = date.getTime() - (7 * 60 * 60 * 1000);
             Date correctedDate = new Date(correctedTime);
-            
             SimpleDateFormat outputFormat = new SimpleDateFormat("EEEE, dd MM yyyy HH:mm:ss", Locale.US);
             outputFormat.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
-            
             return outputFormat.format(correctedDate);
         } catch (ParseException e) {
             Log.e("HistoryViewModel", "Timestamp Parsing Error for date '" + rawDate + "': " + e.getMessage());
@@ -142,13 +154,10 @@ public class HistoryViewModel extends AndroidViewModel {
         try {
             SimpleDateFormat inputFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
             Date date = inputFormat.parse(rawDate);
-            
             long correctedTime = date.getTime() - (7 * 60 * 60 * 1000);
             Date correctedDate = new Date(correctedTime);
-            
             SimpleDateFormat outputFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
             outputFormat.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
-            
             return outputFormat.format(correctedDate);
         } catch (ParseException e) {
             Log.e("HistoryViewModel", "DateOnly Parsing Error for date '" + rawDate + "': " + e.getMessage());
@@ -157,10 +166,8 @@ public class HistoryViewModel extends AndroidViewModel {
                     String datePart = rawDate.substring(0, 10);
                     SimpleDateFormat inputFormatSimple = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                     inputFormatSimple.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
-
                     SimpleDateFormat outputFormatSimple = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-                    outputFormatSimple.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta")); 
-
+                    outputFormatSimple.setTimeZone(TimeZone.getTimeZone("Asia/Jakarta"));
                     Date simpleDate = inputFormatSimple.parse(datePart);
                     return outputFormatSimple.format(simpleDate);
                 } catch (ParseException | StringIndexOutOfBoundsException ex) {
@@ -200,7 +207,14 @@ public class HistoryViewModel extends AndroidViewModel {
                 .map(data -> {
                     String formattedTimestamp = formatRawDateToTimestamp(data.getDate());
                     String dateOnly = formatRawDateToDateOnly(data.getDate());
-                    return new UiHistoryItem(data.getSubject(), formattedTimestamp, data.getDescription(), dateOnly, data.getPlate());
+                    return new UiHistoryItem(
+                            data.getSubject(),
+                            formattedTimestamp,
+                            data.getDescription(),
+                            dateOnly,
+                            data.getPlate(),
+                            data.getImageId()
+                    );
                 })
                 .filter(uiItem -> uiItem.getDateOnly().equals(selectedDate))
                 .collect(Collectors.toList());

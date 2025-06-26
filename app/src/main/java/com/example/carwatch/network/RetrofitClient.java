@@ -14,7 +14,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.util.concurrent.TimeUnit;
 
 public class RetrofitClient {
-    private static final String BASE_URL = "https://carwatch.xetf.my.id";
+    private static final String BASE_URL = "http://192.168.18.9:8000";
 
     private static PersistentCookieJar cookieJar = null;
 
