@@ -185,11 +185,15 @@ public class AccountFragment extends Fragment {
     }
 
     private void showPasswordConfirmationDialog(String title, String message, PasswordConfirmationListener listener) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        // Create ContextThemeWrapper with Material theme for better visibility
+        Context themedContext = new ContextThemeWrapper(requireContext(), 
+                com.google.android.material.R.style.Theme_Material3_Light_Dialog);
+        
+        AlertDialog.Builder builder = new AlertDialog.Builder(themedContext);
         builder.setTitle(title);
         builder.setMessage(message);
 
-        final EditText input = new EditText(requireContext());
+        final EditText input = new EditText(themedContext);
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         input.setHint("Current Password");
         builder.setView(input);
@@ -210,7 +214,11 @@ public class AccountFragment extends Fragment {
     }
 
     private void showLogoutConfirmationDialog() {
-        new AlertDialog.Builder(requireContext())
+        // Create ContextThemeWrapper with Material theme for better visibility
+        Context themedContext = new ContextThemeWrapper(requireContext(), 
+                com.google.android.material.R.style.Theme_Material3_Light_Dialog);
+        
+        new AlertDialog.Builder(themedContext)
                 .setTitle("Logout")
                 .setMessage("Are you sure you want to logout?")
                 .setPositiveButton(android.R.string.yes, (dialog, which) -> {
