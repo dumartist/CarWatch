@@ -25,7 +25,7 @@ import java.util.List;
 public class HistoryAdapter extends ListAdapter<HistoryViewModel.UiHistoryItem, HistoryAdapter.HistoryViewHolder> {
 
     private static final String TAG = "HistoryAdapter";
-    private static final String BASE_IMAGE_URL = "http://192.168.18.9:8000/api/get_image/";
+    private static final String BASE_IMAGE_URL = "https://flask.dumartist.my.id/api/get_image/";
 
     public HistoryAdapter() {
         super(new HistoryDiffCallback());

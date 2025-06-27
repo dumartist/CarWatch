@@ -14,7 +14,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.util.concurrent.TimeUnit;
 
 public class RetrofitClient {
-    private static final String BASE_URL = "http://192.168.18.9:8000";
+    // Change this to your production URL when deploying
+    private static final String BASE_URL = "https://flask.dumartist.my.id";
+    // For local development, use: "http://10.0.2.2:8000"
 
     private static PersistentCookieJar cookieJar = null;
 

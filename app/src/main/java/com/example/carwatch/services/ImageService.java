@@ -22,7 +22,9 @@ public class ImageService {
     private static final String CACHE_DIR = "cache";
     private static final long CACHE_EXPIRY_TIME = 0;
     private static final ExecutorService executor = Executors.newFixedThreadPool(2);
-    private static final String BASE_URL = "https://carwatch.xetf.my.id";
+    // Change this to your production URL when deploying
+    private static final String BASE_URL = "https://flask.dumartist.my.id";
+    // For local development, use: "http://10.0.2.2:8000"
 
     public interface ImageFetchListener {
         void onImageFetched(String imagePath);
