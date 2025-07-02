@@ -91,13 +91,9 @@ public class HistoryFragment extends Fragment {
 
     private void showDatePickerDialog() {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"));
-        
-        // Create ContextThemeWrapper with Material theme for better visibility
-        Context themedContext = new ContextThemeWrapper(requireContext(), 
-                com.google.android.material.R.style.Theme_Material3_Light_Dialog);
-        
         DatePickerDialog datePickerDialog = new DatePickerDialog(
-                themedContext, // Use themed context for better visibility
+                requireContext(),
+                androidx.appcompat.R.style.Theme_AppCompat_Light_Dialog,
                 (view, year, month, dayOfMonth) -> {
                     calendar.set(year, month, dayOfMonth);
                     SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);

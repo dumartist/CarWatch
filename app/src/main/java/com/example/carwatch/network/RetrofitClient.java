@@ -14,9 +14,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.util.concurrent.TimeUnit;
 
 public class RetrofitClient {
-    // Change this to your production URL when deploying
-    private static final String BASE_URL = "https://flask.dumartist.my.id";
-    // For local development, use: "http://10.0.2.2:8000"
+    private static final String BASE_URL = "http://10.0.2.2:8000"; // for Development launch
+    // Use https://carwatch.xetf.my.id or flask.dumartist.my.id for Production launch
 
     private static PersistentCookieJar cookieJar = null;
 

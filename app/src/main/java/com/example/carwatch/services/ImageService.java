@@ -20,11 +20,11 @@ public class ImageService {
     private static final String TAG = "ImageService";
     private static final String CARWATCH_DIR = "CarWatch";
     private static final String CACHE_DIR = "cache";
-    private static final long CACHE_EXPIRY_TIME = 0;
+    private static final long CACHE_EXPIRY_TIME = 5 * 60 * 1000;
     private static final ExecutorService executor = Executors.newFixedThreadPool(2);
-    // Change this to your production URL when deploying
-    private static final String BASE_URL = "https://flask.dumartist.my.id";
-    // For local development, use: "http://10.0.2.2:8000"
+
+    private static final String BASE_URL = "http://10.0.2.2:8000"; // For Development run
+    // Use https://carwatch.xetf.my.id or flask.dumartist.my.id for Production launch
 
     public interface ImageFetchListener {
         void onImageFetched(String imagePath);
@@ -54,7 +54,17 @@ public class ImageService {
                 String contentType = connection.getContentType();
                 Log.d(TAG, "Content type: " + contentType);
 
+                // FIX 3: Better content type validation
                 if (contentType != null && !contentType.startsWith("image/")) {
+                    // Log the actual response for debugging
+                    InputStream errorStream = connection.getErrorStream();
+                    if (errorStream != null) {
+                        byte[] errorBytes = new byte[1024];
+                        int bytesRead = errorStream.read(errorBytes);
+                        String errorResponse = new String(errorBytes, 0, bytesRead);
+                        Log.e(TAG, "Server error response: " + errorResponse);
+                        errorStream.close();
+                    }
                     throw new IOException("Expected image content, got: " + contentType);
                 }
 
@@ -62,6 +72,11 @@ public class ImageService {
 
                 int fileLength = connection.getContentLength();
                 Log.d(TAG, "Image size: " + fileLength + " bytes");
+
+                // FIX 4: Add validation for empty response
+                if (fileLength == 0) {
+                    throw new IOException("Received empty image data from server");
+                }
 
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                 inputStream.close();
@@ -82,6 +97,7 @@ public class ImageService {
             } catch (IOException e) {
                 Log.e(TAG, "Error downloading raw image: " + e.getMessage(), e);
 
+                // FIX 5: Better fallback logic
                 String cachedImagePath = getCachedImagePath(context);
                 if (cachedImagePath != null) {
                     Log.d(TAG, "Using cached image as fallback: " + cachedImagePath);
@@ -101,9 +117,17 @@ public class ImageService {
         connection.setReadTimeout(15000);
         connection.setDoInput(true);
 
+        // FIX 6: Add proper headers
+        connection.setRequestProperty("Accept", "image/*");
+        connection.setRequestProperty("User-Agent", "CarWatch-Android");
+
         int responseCode = connection.getResponseCode();
+        Log.d(TAG, "HTTP Response Code: " + responseCode);
+
         if (responseCode != HttpURLConnection.HTTP_OK) {
-            throw new IOException("Server returned HTTP " + responseCode + " " + connection.getResponseMessage());
+            String responseMessage = connection.getResponseMessage();
+            Log.e(TAG, "Server returned HTTP " + responseCode + " " + responseMessage);
+            throw new IOException("Server returned HTTP " + responseCode + " " + responseMessage);
         }
         return connection;
     }
@@ -145,7 +169,7 @@ public class ImageService {
 
     private static String getCachedImagePath(Context context) {
         File cacheDir = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-                                CARWATCH_DIR + "/" + CACHE_DIR);
+                CARWATCH_DIR + "/" + CACHE_DIR);
 
         if (!cacheDir.exists()) return null;
 
@@ -171,7 +195,7 @@ public class ImageService {
         long currentTime = System.currentTimeMillis();
 
         boolean isValid = (currentTime - lastModified) < CACHE_EXPIRY_TIME;
-        Log.d(TAG, "Cache validity check: " + isValid + " (age: " + (currentTime - lastModified) + "ms)");
+        Log.d(TAG, "Cache validity check: " + isValid + " (age: " + (currentTime - lastModified) + "ms, expiry: " + CACHE_EXPIRY_TIME + "ms)");
 
         return isValid;
     }
@@ -179,7 +203,7 @@ public class ImageService {
     private static void cleanAllOldImages(File carwatchDir, File cacheDir) {
         try {
             File[] mainFiles = carwatchDir.listFiles((dir, name) ->
-                (name.endsWith(".jpg") || name.endsWith(".png")) && !name.equals("cache"));
+                    (name.endsWith(".jpg") || name.endsWith(".png")) && !name.equals("cache"));
             if (mainFiles != null) {
                 int deletedMainFiles = 0;
                 for (File file : mainFiles) {
@@ -212,7 +236,7 @@ public class ImageService {
     public static void clearCache(Context context) {
         executor.execute(() -> {
             File cacheDir = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
-                                    CARWATCH_DIR + "/" + CACHE_DIR);
+                    CARWATCH_DIR + "/" + CACHE_DIR);
 
             if (cacheDir.exists()) {
                 File[] files = cacheDir.listFiles();
